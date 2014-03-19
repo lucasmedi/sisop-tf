@@ -3,13 +3,28 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-namespace ASMReader
+namespace sisop_tf
 {
 	class Program
 	{
+		// Blocos do programa
+		private static Memory memory;
+
+		// Controle de posição de execução
+		// TODO: Externar para classe de processo
+		private static int pc = -1;
+
+		// Valor inicial do contador
+		// TODO: Externar para classe de processo
+		private static int acc = -1;
+
 		static void Main(string[] args)
 		{
-			int pc = -1;
+			// Performance
+			var watch = new Stopwatch();
+			watch.Start();
+
+			memory = new Memory();
 
 			// Log: início da aplicação
 			Console.WriteLine("**** SISOP - Etapa 1 *****");
@@ -17,19 +32,89 @@ namespace ASMReader
 			Console.WriteLine("Passo 1: carregar arquivo .asm");
 			Console.WriteLine("> Instancia variáveis de ambiente");
 
-			// Performance
-			var watch = new Stopwatch();
+			CarregaArquivo();
+
+			// Log: fim do carregamento do arquivo e início do processamento
+			watch.Stop();
+			Console.WriteLine("Fim passo 1 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
+
+			Console.WriteLine();
+
+			ImprimeMemoria();
+
+			Console.WriteLine();
+			Console.WriteLine("Passo 2: executar processamento");
+			watch.Reset();
 			watch.Start();
 
+			ExecutaCodigo();
+
+			Console.WriteLine("Fim passo 2 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
+			
+			// TODO: Rever maneira de gerar um print dos dados
+			//Console.WriteLine();
+
+			//Console.WriteLine("Listar resultado das variáveis");
+			//foreach (var item in dataIndex)
+			//{
+			//	Console.WriteLine("> '{0}': {1}", Convert.ToString(item.Value, 2).PadLeft(8, '0'), memory.Get(item.Value));
+			//}
+			//Console.WriteLine("Fim listar");
+
+			Console.WriteLine();
+
+			Console.WriteLine("**** HALT! *****");
+
+			Console.ReadKey();
+		}
+
+		private static Dictionary<string, int> MontaOperadores()
+		{
+			/*
+			Categoria (Código)  Mnemônico       Função                      Código (binário)
+			Aritmético (00)     ADD op1         acc=acc+(op1)               00
+								SUB op1         acc=acc–(op1)               01
+								MULT op1        acc=acc*(op1)               10
+								DIV op1         acc=acc/(op1)               11
+			Memória (01)        LOAD op1        acc=(op1)                   00
+								STORE op1       (op1)=acc                   01
+			Salto (10)          BRANY label     pc <- label                 00
+								BRPOS label     Se acc > 0 então pc <-op1   01
+								BRZERO label    Se acc = 0 então pc <-op1   10
+								BRNEG label     Se acc < 0 então pc <-op1   11
+			Sistema (11)        SYSCALL index   Chamada de sistema          00
+								LABEL           label de sistema            01
+								.data           area de dados               11
+			*/
+
+			var operators = new Dictionary<string, int>();
+			operators.Add("ADD", (int)Operators.ADD);
+			operators.Add("SUB", (int)Operators.SUB);
+			operators.Add("MULT", (int)Operators.MULT);
+			operators.Add("DIV", (int)Operators.DIV);
+
+			operators.Add("LOAD", (int)Operators.LOAD);
+			operators.Add("STORE", (int)Operators.STORE);
+
+			operators.Add("BRANY", (int)Operators.BRANY);
+			operators.Add("BRPOS", (int)Operators.BRPOS);
+			operators.Add("BRZERO", (int)Operators.BRZERO);
+			operators.Add("BRNEG", (int)Operators.BRNEG);
+
+			operators.Add("SYSCALL", (int)Operators.SYSCALL);
+			operators.Add("LABEL", (int)Operators.LABEL);
+
+			return operators;
+		}
+
+		private static void CarregaArquivo()
+		{
 			// Variáveis de controle de abertura e fechamento de bloco
 			var openDataRead = false;
 			var openCodeRead = false;
 
 			// Carrega lista de operadores
 			var operators = MontaOperadores();
-
-			// Blocos do programa
-			var memory = new Memory();
 
 			var dataIndex = new Dictionary<string, int>();
 
@@ -141,32 +226,10 @@ namespace ASMReader
 					}
 				}
 			}
+		}
 
-			// Log: fim do carregamento do arquivo e início do processamento
-			watch.Stop();
-			Console.WriteLine("Fim passo 1 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
-
-			Console.WriteLine();
-
-			Console.WriteLine("Imprimir estado da memória");
-			var icount = 0;
-			while (memory.HasNext(icount))
-			{
-				var o = memory.Get(icount);
-				Console.WriteLine("> {0}: {1}", Convert.ToString(icount, 2).PadLeft(8, '0'), o);
-
-				icount++;
-			}
-			Console.WriteLine("Fim imprimir");
-
-			Console.WriteLine();
-			Console.WriteLine("Passo 2: executar processamento");
-			watch.Reset();
-			watch.Start();
-
-			// Valor inicial do contador
-			var acc = -1;
-
+		private static void ExecutaCodigo()
+		{
 			var processando = true;
 
 			// Executa programa
@@ -182,7 +245,7 @@ namespace ASMReader
 				pc++;
 				var operando = memory.Get(pc);
 				pc++;
-				
+
 				var op = (Operators)int.Parse(operador);
 				var logString = LogOperation(op);
 
@@ -243,53 +306,53 @@ namespace ASMReader
 						logString = string.Format(logString, acc, operando);
 						break;
 					case Operators.BRANY:
-					    pc = int.Parse(operando);
+						pc = int.Parse(operando);
 
-					    // Log
+						// Log
 						logString = string.Format(logString, Convert.ToString(int.Parse(operando), 2));
-					    break;
+						break;
 					case Operators.BRPOS:
-					    if (acc > 0)
-					    {
+						if (acc > 0)
+						{
 							pc = int.Parse(operando);
-					    }
+						}
 
-					    // Log
+						// Log
 						logString = string.Format(logString, acc, Convert.ToString(int.Parse(operando), 2));
-					    break;
+						break;
 					case Operators.BRZERO:
-					    if (acc == 0)
-					    {
+						if (acc == 0)
+						{
 							pc = int.Parse(operando);
-					    }
+						}
 
-					    // Log
+						// Log
 						logString = string.Format(logString, acc, Convert.ToString(int.Parse(operando), 2));
-					    break;
+						break;
 					case Operators.BRNEG:
-					    if (acc < 0)
-					    {
+						if (acc < 0)
+						{
 							pc = int.Parse(operando);
-					    }
+						}
 
-					    // Log
+						// Log
 						logString = string.Format(logString, acc, Convert.ToString(int.Parse(operando), 2));
-					    break;
+						break;
 					case Operators.SYSCALL:
-					    // TODO: Rever funcionalidade
-					    if (value == 0)
-					    {
+						// TODO: Rever funcionalidade
+						if (value == 0)
+						{
 							processando = false;
 
-					        // Log
-					        logString = string.Format(logString, "HALT");
-					    }
-					    else
-					    {
-					        // Log
-					        logString = string.Format(logString, "?");
-					    }
-					    break;
+							// Log
+							logString = string.Format(logString, "HALT");
+						}
+						else
+						{
+							// Log
+							logString = string.Format(logString, "?");
+						}
+						break;
 					default:
 						//throw new Exception("Better Call Saul!");
 						break;
@@ -297,19 +360,20 @@ namespace ASMReader
 
 				Console.WriteLine(logString);
 			}
+		}
 
-			Console.WriteLine("Fim passo 2 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
-			Console.WriteLine();
-			Console.WriteLine("Listar resultado das variáveis");
-			foreach (var item in dataIndex)
+		private static void ImprimeMemoria()
+		{
+			Console.WriteLine("Imprimir estado da memória");
+			var icount = 0;
+			while (memory.HasNext(icount))
 			{
-				Console.WriteLine("> '{0}': {1}", Convert.ToString(item.Value, 2).PadLeft(8, '0'), memory.Get(item.Value));
-			}
-			Console.WriteLine("Fim listar");
-			Console.WriteLine();
-			Console.WriteLine("**** HALT! *****");
+				var o = memory.Get(icount);
+				Console.WriteLine("> {0}: {1}", Convert.ToString(icount, 2).PadLeft(8, '0'), o);
 
-			Console.ReadKey();
+				icount++;
+			}
+			Console.WriteLine("Fim imprimir");
 		}
 
 		private static string LogOperation(Operators op)
@@ -358,108 +422,6 @@ namespace ASMReader
 			}
 
 			return log;
-		}
-
-		private static Dictionary<string, int> MontaOperadores()
-		{
-			/*
-			Categoria (Código)  Mnemônico       Função                      Código (binário)
-			Aritmético (00)     ADD op1         acc=acc+(op1)               00
-								SUB op1         acc=acc–(op1)               01
-								MULT op1        acc=acc*(op1)               10
-								DIV op1         acc=acc/(op1)               11
-			Memória (01)        LOAD op1        acc=(op1)                   00
-								STORE op1       (op1)=acc                   01
-			Salto (10)          BRANY label     pc <- label                 00
-								BRPOS label     Se acc > 0 então pc <-op1   01
-								BRZERO label    Se acc = 0 então pc <-op1   10
-								BRNEG label     Se acc < 0 então pc <-op1   11
-			Sistema (11)        SYSCALL index   Chamada de sistema          00
-								LABEL           label de sistema            01
-								.data           area de dados               11
-			*/
-
-			var operators = new Dictionary<string, int>();
-			operators.Add("ADD", (int)Operators.ADD);
-			operators.Add("SUB", (int)Operators.SUB);
-			operators.Add("MULT", (int)Operators.MULT);
-			operators.Add("DIV", (int)Operators.DIV);
-
-			operators.Add("LOAD", (int)Operators.LOAD);
-			operators.Add("STORE", (int)Operators.STORE);
-
-			operators.Add("BRANY", (int)Operators.BRANY);
-			operators.Add("BRPOS", (int)Operators.BRPOS);
-			operators.Add("BRZERO", (int)Operators.BRZERO);
-			operators.Add("BRNEG", (int)Operators.BRNEG);
-
-			operators.Add("SYSCALL", (int)Operators.SYSCALL);
-			operators.Add("LABEL", (int)Operators.LABEL);
-
-			return operators;
-		}
-
-		public enum Operators
-		{
-			// Aritméticos
-			ADD = 0000,
-			SUB = 0001,
-			MULT = 0010,
-			DIV = 0011,
-
-			// Acesso a memória
-			LOAD = 0100,
-			STORE = 0101,
-
-			// Saltos
-			BRANY = 1000,
-			BRPOS = 1001,
-			BRZERO = 1010,
-			BRNEG = 1011,
-
-			// Sistema
-			SYSCALL = 1100,
-
-			// Outro
-			LABEL = 1101
-		}
-	}
-
-	public class Memory
-	{
-		private string[] memory;
-		private int key;
-
-		public Memory()
-		{
-			memory = new string[8 * 1024];
-			key = 0;
-		}
-
-		public void Add(string value)
-		{
-			memory[key] = value;
-			key++;
-		}
-
-		public string Get(int key)
-		{
-			return memory[key];
-		}
-
-		public void Set(int key, string value)
-		{
-			memory[key] = value;
-		}
-
-		public int GetIndex()
-		{
-			return key;
-		}
-
-		public bool HasNext(int key)
-		{
-			return !((string.IsNullOrEmpty(memory[key]) && string.IsNullOrEmpty(memory[key + 1])) || key >= memory.Length);
 		}
 	}
 }
