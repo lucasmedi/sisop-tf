@@ -41,8 +41,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Memory.cs" />
-    <Compile Include="Operators.cs" />
+    <Compile Include="Classes\Memory.cs" />
+    <Compile Include="Enums\Operators.cs" />
+    <Compile Include="Classes\Process.cs" />
+    <Compile Include="Classes\Processor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -50,10 +52,11 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="files\code.asm" />
-    <Content Include="files\code2.asm" />
-    <Content Include="files\code3.asm" />
+    <Content Include="Files\code.asm" />
+    <Content Include="Files\code2.asm" />
+    <Content Include="Files\code3.asm" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

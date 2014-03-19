@@ -121,7 +121,7 @@ namespace sisop_tf
 			// Dicionário com as posições das labels
 			var labels = new Dictionary<string, int>();
 
-			var filePath = @"..\..\files\code.asm";
+			var filePath = @"..\..\Files\code.asm";
 
 			// Log: nome do arquivo a ser executado
 			Console.WriteLine("> Inicia leitura do arquivo '{0}'", filePath);
