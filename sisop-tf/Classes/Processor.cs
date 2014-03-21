@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace sisop_tf
 {
-	class Processor
+	public class Processor
 	{
 	}
 }

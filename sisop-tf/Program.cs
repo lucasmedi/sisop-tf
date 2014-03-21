@@ -32,7 +32,8 @@ namespace sisop_tf
 			Console.WriteLine("Passo 1: carregar arquivo .asm");
 			Console.WriteLine("> Instancia variáveis de ambiente");
 
-			CarregaArquivo();
+			var filePath = @"..\..\Files\code.asm";
+			var process = Read(filePath);
 
 			// Log: fim do carregamento do arquivo e início do processamento
 			watch.Stop();
@@ -107,7 +108,7 @@ namespace sisop_tf
 			return operators;
 		}
 
-		private static void CarregaArquivo()
+		private static Process Read(string filePath)
 		{
 			// Variáveis de controle de abertura e fechamento de bloco
 			var openDataRead = false;
@@ -120,8 +121,6 @@ namespace sisop_tf
 
 			// Dicionário com as posições das labels
 			var labels = new Dictionary<string, int>();
-
-			var filePath = @"..\..\Files\code.asm";
 
 			// Log: nome do arquivo a ser executado
 			Console.WriteLine("> Inicia leitura do arquivo '{0}'", filePath);
@@ -140,6 +139,9 @@ namespace sisop_tf
 
 				precode.Add(line);
 			}
+
+			// Guarda a primeira posição de data
+			int beginData = memory.GetIndex();
 
 			// Inicia o carregamento do arquivo
 			foreach (var line in precode)
@@ -162,14 +164,13 @@ namespace sisop_tf
 				if (openDataRead)
 				{
 					var s = line.Trim().Split(' ');
-
-					memory.Add(s[0]);
 					memory.Add(s[1]);
 					dataIndex.Add(s[0], memory.GetIndex() - 1);
 				}
 			}
 
-			memory.Add(string.Empty);
+			// Guarda a última posição de data / primeira posição de código
+			int beginCode = memory.GetIndex();
 
 			foreach (var line in precode)
 			{
@@ -226,6 +227,11 @@ namespace sisop_tf
 					}
 				}
 			}
+
+			// Guarda a última posição de código
+			int endCode = memory.GetIndex() -1;
+
+			return new Process(beginData, beginCode, endCode);
 		}
 
 		private static void ExecutaCodigo()

@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 namespace sisop_tf
 {
 	public class Memory
