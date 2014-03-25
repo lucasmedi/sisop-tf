@@ -10,14 +10,6 @@ namespace sisop_tf
 		// Blocos do programa
 		private static Memory memory;
 
-		// Controle de posição de execução
-		// TODO: Externar para classe de processo
-		private static int pc = -1;
-
-		// Valor inicial do contador
-		// TODO: Externar para classe de processo
-		private static int acc = -1;
-
 		static void Main(string[] args)
 		{
 			// Performance
@@ -48,7 +40,7 @@ namespace sisop_tf
 			watch.Reset();
 			watch.Start();
 
-			ExecutaCodigo();
+			ExecutaCodigo(process);
 
 			Console.WriteLine("Fim passo 2 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
 			
@@ -170,6 +162,7 @@ namespace sisop_tf
 
 			// Guarda a última posição de data / primeira posição de código
 			int beginCode = memory.GetIndex();
+			int pc = -1;
 
 			foreach (var line in precode)
 			{
@@ -230,26 +223,28 @@ namespace sisop_tf
 			// Guarda a última posição de código
 			int endCode = memory.GetIndex() -1;
 
-			return new Process(beginData, beginCode, endCode);
+			var process = new Process(beginData, beginCode, endCode);
+			process.JumpTo(pc);
+			return process;
 		}
 
-		private static void ExecutaCodigo()
+		private static void ExecutaCodigo(Process process)
 		{
 			var processando = true;
 
 			// Executa programa
 			while (processando)
 			{
-				processando = memory.HasNext(pc);
+				processando = process.HasNext();
 				if (!processando)
 					continue;
 
 				int value = -1;
 
-				var operador = memory.Get(pc);
-				pc++;
-				var operando = memory.Get(pc);
-				pc++;
+				var operador = memory.Get(process.Pc);
+				process.Next();
+				var operando = memory.Get(process.Pc);
+				process.Next();
 
 				var op = (Operators)int.Parse(operador);
 				var logString = LogOperation(op);
@@ -275,73 +270,73 @@ namespace sisop_tf
 				switch (op)
 				{
 					case Operators.ADD:
-						acc += value;
+						process.LoadAc(process.Ac + value);
 
 						// Log
-						logString = string.Format(logString, value, acc);
+						logString = string.Format(logString, value, process.Ac);
 						break;
 					case Operators.SUB:
-						acc -= value;
+						process.LoadAc(process.Ac - value);
 
 						// Log
-						logString = string.Format(logString, value, acc);
+						logString = string.Format(logString, value, process.Ac);
 						break;
 					case Operators.MULT:
-						acc *= value;
+						process.LoadAc(process.Ac * value);
 
 						// Log
-						logString = string.Format(logString, value, acc);
+						logString = string.Format(logString, value, process.Ac);
 						break;
 					case Operators.DIV:
-						acc /= value;
+						process.LoadAc(process.Ac / value);
 
 						// Log
-						logString = string.Format(logString, value, acc);
+						logString = string.Format(logString, value, process.Ac);
 						break;
 					case Operators.LOAD:
-						acc = value;
+						process.LoadAc(value);
 
 						// Log
-						logString = string.Format(logString, acc, operando);
+						logString = string.Format(logString, process.Ac, operando);
 						break;
 					case Operators.STORE:
-						memory.Set(int.Parse(operando), acc.ToString());
+						memory.Set(int.Parse(operando), process.Ac.ToString());
 
 						// Log
-						logString = string.Format(logString, acc, operando);
+						logString = string.Format(logString, process.Ac, operando);
 						break;
 					case Operators.BRANY:
-						pc = int.Parse(operando);
+						process.JumpTo(int.Parse(operando));
 
 						// Log
 						logString = string.Format(logString, int.Parse(operando).ToString("X"));
 						break;
 					case Operators.BRPOS:
-						if (acc > 0)
+						if (process.Ac > 0)
 						{
-							pc = int.Parse(operando);
+							process.JumpTo(int.Parse(operando));
 						}
 
 						// Log
-						logString = string.Format(logString, acc, int.Parse(operando).ToString("X"));
+						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
 						break;
 					case Operators.BRZERO:
-						if (acc == 0)
+						if (process.Ac == 0)
 						{
-							pc = int.Parse(operando);
+							process.JumpTo(int.Parse(operando));
 						}
 
 						// Log
-						logString = string.Format(logString, acc, int.Parse(operando).ToString("X"));
+						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
 						break;
 					case Operators.BRNEG:
-						if (acc < 0)
+						if (process.Ac < 0)
 						{
-							pc = int.Parse(operando);
+							process.JumpTo(int.Parse(operando));
 						}
 
 						// Log
-						logString = string.Format(logString, acc, int.Parse(operando).ToString("X"));
+						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
 						break;
 					case Operators.SYSCALL:
 						// TODO: Rever funcionalidade
