@@ -103,7 +103,6 @@ namespace sisop_tf
 			operators.Add("BRNEG", (int)Operators.BRNEG);
 
 			operators.Add("SYSCALL", (int)Operators.SYSCALL);
-			operators.Add("LABEL", (int)Operators.LABEL);
 
 			return operators;
 		}
@@ -315,7 +314,7 @@ namespace sisop_tf
 						pc = int.Parse(operando);
 
 						// Log
-						logString = string.Format(logString, Convert.ToString(int.Parse(operando), 2));
+						logString = string.Format(logString, int.Parse(operando).ToString("X"));
 						break;
 					case Operators.BRPOS:
 						if (acc > 0)
@@ -324,7 +323,7 @@ namespace sisop_tf
 						}
 
 						// Log
-						logString = string.Format(logString, acc, Convert.ToString(int.Parse(operando), 2));
+						logString = string.Format(logString, acc, int.Parse(operando).ToString("X"));
 						break;
 					case Operators.BRZERO:
 						if (acc == 0)
@@ -333,7 +332,7 @@ namespace sisop_tf
 						}
 
 						// Log
-						logString = string.Format(logString, acc, Convert.ToString(int.Parse(operando), 2));
+						logString = string.Format(logString, acc, int.Parse(operando).ToString("X"));
 						break;
 					case Operators.BRNEG:
 						if (acc < 0)
@@ -342,7 +341,7 @@ namespace sisop_tf
 						}
 
 						// Log
-						logString = string.Format(logString, acc, Convert.ToString(int.Parse(operando), 2));
+						logString = string.Format(logString, acc, int.Parse(operando).ToString("X"));
 						break;
 					case Operators.SYSCALL:
 						// TODO: Rever funcionalidade
@@ -375,7 +374,13 @@ namespace sisop_tf
 			while (memory.HasNext(icount))
 			{
 				var o = memory.Get(icount);
-				Console.WriteLine("> {0}: {1}", Convert.ToString(icount, 2).PadLeft(8, '0'), o);
+				var i = 0;
+				if (int.TryParse(o, out i))
+				{
+					o = i.ToString("X");
+				}
+
+				Console.WriteLine("> {0}: {1}", icount.ToString("X").PadLeft(8, '0'), o);
 
 				icount++;
 			}
@@ -400,7 +405,7 @@ namespace sisop_tf
 					log = "> (DIV) Dividiu acumulador por {0} resultando em {1} ";
 					break;
 				case Operators.LOAD:
-					log = "> (LOAD) Carregou valor {0} da variável '{1}' ao acumulador ";
+					log = "> (LOAD) Carregou valor {0} da posição '{1}' ao acumulador ";
 					break;
 				case Operators.STORE:
 					log = "> (STORE) Salvou valor {0} do acumulador na variável '{1}' ";
@@ -419,9 +424,6 @@ namespace sisop_tf
 					break;
 				case Operators.SYSCALL:
 					log = "> (SYSCALL) Chamada de sistema: {0} ";
-					break;
-				case Operators.LABEL:
-					log = "> (LABEL) Armazenou ponto de retorno '{0}' ";
 					break;
 				default:
 					break;
