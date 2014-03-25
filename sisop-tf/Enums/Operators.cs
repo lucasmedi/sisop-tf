@@ -4,25 +4,22 @@ namespace sisop_tf
 	public enum Operators
 	{
 		// Aritméticos
-		ADD = 0000,
-		SUB = 0001,
-		MULT = 0010,
-		DIV = 0011,
+		ADD = 0,
+		SUB = 1,
+		MULT = 2,
+		DIV = 3,
 
 		// Acesso a memória
-		LOAD = 0100,
-		STORE = 0101,
+		LOAD = 4,
+		STORE = 5,
 
 		// Saltos
-		BRANY = 1000,
-		BRPOS = 1001,
-		BRZERO = 1010,
-		BRNEG = 1011,
+		BRANY = 8,
+		BRPOS = 9,
+		BRZERO = 10,
+		BRNEG = 11,
 
 		// Sistema
-		SYSCALL = 1100,
-
-		// Outro
-		LABEL = 1101
+		SYSCALL = 12
 	}
 }
