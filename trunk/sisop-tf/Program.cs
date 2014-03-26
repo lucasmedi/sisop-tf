@@ -27,42 +27,43 @@ namespace sisop_tf
 			Console.WriteLine("Passo 1: carregar arquivo .asm");
 			Console.WriteLine("> Instancia variáveis de ambiente");
 
-			var filePath = @"..\..\Files\code.asm";
-			var process = Read(filePath);
 
-			// Log: fim do carregamento do arquivo e início do processamento
-			watch.Stop();
-			Console.WriteLine("Fim passo 1 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
+            string[] filePaths = Directory.GetFiles(@"..\..\Files\", "*.asm");
+            for (int i = 0; i < filePaths.Length; i++)
+            {
+                var process = Read(filePaths[i]);
+                // Log: fim do carregamento do arquivo e início do processamento
+                watch.Stop();
+                Console.WriteLine("Fim passo 1 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
 
-			Console.WriteLine();
+                Console.WriteLine();
 
-			ImprimeMemoria();
+                ImprimeMemoria();
+                Console.WriteLine("Passo 2: executar processamento");
+                watch.Reset();
+                watch.Start();
 
-			Console.WriteLine();
-			Console.WriteLine("Passo 2: executar processamento");
-			watch.Reset();
-			watch.Start();
+                //Adiciona o processo na Fila de ToProcess
+                processor.AddProcessToQueue(process);
 
-            //Adiciona o processo na Fila de ToProcess
-            processor.AddProcessToQueue(process);
+                Console.WriteLine("Fim passo 2 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
 
-			Console.WriteLine("Fim passo 2 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
-			
-			// TODO: Rever maneira de gerar um print dos dados
-			//Console.WriteLine();
+                // TODO: Rever maneira de gerar um print dos dados
+                //Console.WriteLine();
 
-			//Console.WriteLine("Listar resultado das variáveis");
-			//foreach (var item in dataIndex)
-			//{
-			//	Console.WriteLine("> '{0}': {1}", Convert.ToString(item.Value, 2).PadLeft(8, '0'), memory.Get(item.Value));
-			//}
-			//Console.WriteLine("Fim listar");
+                //Console.WriteLine("Listar resultado das variáveis");
+                //foreach (var item in dataIndex)
+                //{
+                //	Console.WriteLine("> '{0}': {1}", Convert.ToString(item.Value, 2).PadLeft(8, '0'), memory.Get(item.Value));
+                //}
+                //Console.WriteLine("Fim listar");
 
-			Console.WriteLine();
+                Console.WriteLine();
 
-			Console.WriteLine("**** HALT! *****");
+                Console.WriteLine("**** HALT! *****");
 
-			Console.ReadKey();
+            }
+            Console.ReadKey();
 		}
 
 		private static Dictionary<string, int> MontaOperadores()
@@ -229,6 +230,7 @@ namespace sisop_tf
 
 			var process = new Process(beginData, beginCode, endCode);
 			process.JumpTo(pc);
+            
 			return process;
 		}
 
