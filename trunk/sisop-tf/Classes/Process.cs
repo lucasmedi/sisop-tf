@@ -1,4 +1,5 @@
 ﻿
+using sisop_tf.Enums;
 using System;
 namespace sisop_tf
 {
@@ -8,14 +9,25 @@ namespace sisop_tf
 		public int BeginCode { get; private set; }
 		public int EndCode { get; private set; }
 
+        public int Id { get; set; }
 		public int Pc { get; private set; }
 		public int Ac { get; private set; }
 
-		public Process(int beginData, int beginCode, int endCode)
-		{
+        public int AT { get; set; }
+        public int PT { get; set; }
+        public int TT { get; set; }
+        
+        public Priority priority { get; set; }
+
+		public Process(int beginData, int beginCode, int endCode, int arriveTime = 0, Priority prior = Priority.Baixa)
+		{            
 			BeginData = beginData;
 			BeginCode = beginCode;
 			EndCode = endCode;
+            PT = (endCode - beginCode)/2;
+            
+            AT = arriveTime;
+            priority = prior;           
 
 			Pc = beginCode;
 		}

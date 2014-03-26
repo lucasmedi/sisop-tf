@@ -9,14 +9,17 @@ namespace sisop_tf
 	{
 		// Blocos do programa
 		private static Memory memory;
+        private static Processor processor;
 
 		static void Main(string[] args)
-		{
+		{            
 			// Performance
 			var watch = new Stopwatch();
 			watch.Start();
 
 			memory = new Memory();
+            //Cria o processador para os processos da fila
+            processor = new Processor(memory);
 
 			// Log: início da aplicação
 			Console.WriteLine("**** SISOP - Etapa 1 *****");
@@ -40,7 +43,8 @@ namespace sisop_tf
 			watch.Reset();
 			watch.Start();
 
-			ExecutaCodigo(process);
+            //Adiciona o processo na Fila de ToProcess
+            processor.AddProcessToQueue(process);
 
 			Console.WriteLine("Fim passo 2 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
 			
@@ -228,140 +232,6 @@ namespace sisop_tf
 			return process;
 		}
 
-		private static void ExecutaCodigo(Process process)
-		{
-			var processando = true;
-
-			// Executa programa
-			while (processando)
-			{
-				processando = process.HasNext();
-				if (!processando)
-					continue;
-
-				int value = -1;
-
-				var operador = memory.Get(process.Pc);
-				process.Next();
-				var operando = memory.Get(process.Pc);
-				process.Next();
-
-				var op = (Operators)int.Parse(operador);
-				var logString = LogOperation(op);
-
-				// verifica se é acesso imediato
-				if (operando.Contains("#"))
-				{
-					// remove o indicador de acesso imediato
-					int.TryParse(operando.Replace("#", string.Empty), out value);
-				}
-				// verifica se é acesso direto
-				else if (op != Operators.SYSCALL && int.TryParse(operando, out value))
-				{
-					// recupera valor do bloco de dados
-					value = int.Parse(memory.Get(value));
-				}
-				else
-				{
-					continue;
-				}
-
-				// Executa a operação
-				switch (op)
-				{
-					case Operators.ADD:
-						process.LoadAc(process.Ac + value);
-
-						// Log
-						logString = string.Format(logString, value, process.Ac);
-						break;
-					case Operators.SUB:
-						process.LoadAc(process.Ac - value);
-
-						// Log
-						logString = string.Format(logString, value, process.Ac);
-						break;
-					case Operators.MULT:
-						process.LoadAc(process.Ac * value);
-
-						// Log
-						logString = string.Format(logString, value, process.Ac);
-						break;
-					case Operators.DIV:
-						process.LoadAc(process.Ac / value);
-
-						// Log
-						logString = string.Format(logString, value, process.Ac);
-						break;
-					case Operators.LOAD:
-						process.LoadAc(value);
-
-						// Log
-						logString = string.Format(logString, process.Ac, operando);
-						break;
-					case Operators.STORE:
-						memory.Set(int.Parse(operando), process.Ac.ToString());
-
-						// Log
-						logString = string.Format(logString, process.Ac, operando);
-						break;
-					case Operators.BRANY:
-						process.JumpTo(int.Parse(operando));
-
-						// Log
-						logString = string.Format(logString, int.Parse(operando).ToString("X"));
-						break;
-					case Operators.BRPOS:
-						if (process.Ac > 0)
-						{
-							process.JumpTo(int.Parse(operando));
-						}
-
-						// Log
-						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
-						break;
-					case Operators.BRZERO:
-						if (process.Ac == 0)
-						{
-							process.JumpTo(int.Parse(operando));
-						}
-
-						// Log
-						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
-						break;
-					case Operators.BRNEG:
-						if (process.Ac < 0)
-						{
-							process.JumpTo(int.Parse(operando));
-						}
-
-						// Log
-						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
-						break;
-					case Operators.SYSCALL:
-						// TODO: Rever funcionalidade
-						if (value == 0)
-						{
-							processando = false;
-
-							// Log
-							logString = string.Format(logString, "HALT");
-						}
-						else
-						{
-							// Log
-							logString = string.Format(logString, "?");
-						}
-						break;
-					default:
-						//throw new Exception("Better Call Saul!");
-						break;
-				}
-
-				Console.WriteLine(logString);
-			}
-		}
-
 		private static void ImprimeMemoria()
 		{
 			Console.WriteLine("Imprimir estado da memória");
@@ -382,7 +252,7 @@ namespace sisop_tf
 			Console.WriteLine("Fim imprimir");
 		}
 
-		private static string LogOperation(Operators op)
+		public static string LogOperation(Operators op)
 		{
 			var log = String.Empty;
 			switch (op)
