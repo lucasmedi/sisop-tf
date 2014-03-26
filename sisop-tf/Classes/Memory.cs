@@ -8,7 +8,7 @@ namespace sisop_tf
 
 		public Memory()
 		{
-			memory = new string[8 * 1024];
+			memory = new string[64];
 			key = 0;
 		}
 
@@ -33,10 +33,14 @@ namespace sisop_tf
 			return key;
 		}
 
-		// TODO: Rever funcionalidade
+		/// <summary>
+		/// Somente para testes.
+		/// </summary>
+		/// <param name="key"></param>
+		/// <returns></returns>
 		public bool HasNext(int key)
 		{
-			return !((string.IsNullOrEmpty(memory[key]) && string.IsNullOrEmpty(memory[key + 1])) || key >= memory.Length);
+			return !string.IsNullOrEmpty(memory[key]);
 		}
 	}
 }

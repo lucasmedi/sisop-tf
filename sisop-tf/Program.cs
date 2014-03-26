@@ -12,14 +12,38 @@ namespace sisop_tf
         private static Processor processor;
 
 		static void Main(string[] args)
-		{            
+		{
+			memory = new Memory();
+
+			// Cria o processador para os processos da fila
+			processor = new Processor(memory);
+
+			string[] filePaths = Directory.GetFiles(@"..\..\Files\", "*.asm");
+			for (int i = 0; i < filePaths.Length; i++)
+			{
+				var process = Read(filePaths[i]);
+				
+				ImprimeMemoria(process.BeginData);
+				Console.WriteLine();
+
+				// Adiciona o processo na fila
+				processor.AddToQueue(process);
+			}
+
+			int j = 0;
+			while (!processor.IsEmpty())
+			{
+				processor.Execute();
+			}
+
+			Console.ReadKey();
+		}
+
+		private static void Start()
+		{
 			// Performance
 			var watch = new Stopwatch();
 			watch.Start();
-
-			memory = new Memory();
-            //Cria o processador para os processos da fila
-            processor = new Processor(memory);
 
 			// Log: início da aplicação
 			Console.WriteLine("**** SISOP - Etapa 1 *****");
@@ -27,43 +51,33 @@ namespace sisop_tf
 			Console.WriteLine("Passo 1: carregar arquivo .asm");
 			Console.WriteLine("> Instancia variáveis de ambiente");
 
+			// Log: fim do carregamento do arquivo e início do processamento
+			watch.Stop();
+			Console.WriteLine("Fim passo 1 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
 
-            string[] filePaths = Directory.GetFiles(@"..\..\Files\", "*.asm");
-            for (int i = 0; i < filePaths.Length; i++)
-            {
-                var process = Read(filePaths[i]);
-                // Log: fim do carregamento do arquivo e início do processamento
-                watch.Stop();
-                Console.WriteLine("Fim passo 1 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
+			Console.WriteLine();
 
-                Console.WriteLine();
+			ImprimeMemoria();
+			Console.WriteLine("Passo 2: executar processamento");
 
-                ImprimeMemoria();
-                Console.WriteLine("Passo 2: executar processamento");
-                watch.Reset();
-                watch.Start();
+			watch.Reset();
+			watch.Start();
 
-                //Adiciona o processo na Fila de ToProcess
-                processor.AddProcessToQueue(process);
+			Console.WriteLine("Fim passo 2 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
 
-                Console.WriteLine("Fim passo 2 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
+			// TODO: Rever maneira de gerar um print dos dados
+			//Console.WriteLine();
 
-                // TODO: Rever maneira de gerar um print dos dados
-                //Console.WriteLine();
+			//Console.WriteLine("Listar resultado das variáveis");
+			//foreach (var item in dataIndex)
+			//{
+			//	Console.WriteLine("> '{0}': {1}", Convert.ToString(item.Value, 2).PadLeft(8, '0'), memory.Get(item.Value));
+			//}
+			//Console.WriteLine("Fim listar");
 
-                //Console.WriteLine("Listar resultado das variáveis");
-                //foreach (var item in dataIndex)
-                //{
-                //	Console.WriteLine("> '{0}': {1}", Convert.ToString(item.Value, 2).PadLeft(8, '0'), memory.Get(item.Value));
-                //}
-                //Console.WriteLine("Fim listar");
+			Console.WriteLine();
 
-                Console.WriteLine();
-
-                Console.WriteLine("**** HALT! *****");
-
-            }
-            Console.ReadKey();
+			Console.WriteLine("**** HALT! *****");
 		}
 
 		private static Dictionary<string, int> MontaOperadores()
@@ -234,10 +248,9 @@ namespace sisop_tf
 			return process;
 		}
 
-		private static void ImprimeMemoria()
+		private static void ImprimeMemoria(int icount = 0)
 		{
 			Console.WriteLine("Imprimir estado da memória");
-			var icount = 0;
 			while (memory.HasNext(icount))
 			{
 				var o = memory.Get(icount);

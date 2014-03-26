@@ -1,169 +1,191 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace sisop_tf
 {
 	public class Processor
 	{
-        public int Quantum { get; set; }
-        public Memory memory { get; set; }
+		private Memory memory { get; set; }
+		private int quantum { get; set; }
 
-        public Processor(Memory mem, int qtn = 0)
-        {
-            memory = mem;
-            Quantum = qtn;
-            ToProcess = new Queue<Process>();
-            Suspended = new List<Process>();
-        }
-        
-        private Queue<Process> ToProcess { get; set; }
-        public List<Process> Suspended { get; set; }
+		private Queue<Process> processing { get; set; }
+		private List<Process> waiting { get; set; }
 
-        public Process GetProcessToExecute()
-        {
-            return ToProcess.Dequeue();
-        }
+		public Processor(Memory mem, int qtn = 5)
+		{
+			memory = mem;
+			quantum = qtn;
 
-        public void AddProcessToQueue(Process p)
-        {
-            ToProcess.Enqueue(p);
-        }
+			processing = new Queue<Process>();
+			waiting = new List<Process>();
+		}
 
-        public void ExecutaCodigo(Process process)
-        {
-            var processando = true;
+		public void AddToQueue(Process p)
+		{
+			// TODO: Adicionar tratamento, verificando se há espaço na memória
 
-            // Executa programa
-            while (processando)
-            {
-                processando = process.HasNext();
-                if (!processando)
-                    continue;
+			processing.Enqueue(p);
+		}
 
-                int value = -1;
+		public Process GetNext()
+		{
+			return processing.Dequeue();
+		}
 
-                var operador = memory.Get(process.Pc);
-                process.Next();
-                var operando = memory.Get(process.Pc);
-                process.Next();
+		public bool IsEmpty()
+		{
+			return processing.Count == 0;
+		}
 
-                var op = (Operators)int.Parse(operador);
-                var logString = Program.LogOperation(op);
+		public void Execute()
+		{
+			int control = 0;
+			var processando = true;
 
-                // verifica se é acesso imediato
-                if (operando.Contains("#"))
-                {
-                    // remove o indicador de acesso imediato
-                    int.TryParse(operando.Replace("#", string.Empty), out value);
-                }
-                // verifica se é acesso direto
-                else if (op != Operators.SYSCALL && int.TryParse(operando, out value))
-                {
-                    // recupera valor do bloco de dados
-                    value = int.Parse(memory.Get(value));
-                }
-                else
-                {
-                    continue;
-                }
+			var process = GetNext();
 
-                // Executa a operação
-                switch (op)
-                {
-                    case Operators.ADD:
-                        process.LoadAc(process.Ac + value);
+			Console.WriteLine("Processando: {0}", process.Id);
 
-                        // Log
-                        logString = string.Format(logString, value, process.Ac);
-                        break;
-                    case Operators.SUB:
-                        process.LoadAc(process.Ac - value);
+			// Executa programa
+			while (processando)
+			{
+				processando = process.HasNext() && control < quantum;
+				if (!processando)
+					continue;
 
-                        // Log
-                        logString = string.Format(logString, value, process.Ac);
-                        break;
-                    case Operators.MULT:
-                        process.LoadAc(process.Ac * value);
+				int value = -1;
 
-                        // Log
-                        logString = string.Format(logString, value, process.Ac);
-                        break;
-                    case Operators.DIV:
-                        process.LoadAc(process.Ac / value);
+				var operador = memory.Get(process.Pc);
+				process.Next();
+				var operando = memory.Get(process.Pc);
+				process.Next();
 
-                        // Log
-                        logString = string.Format(logString, value, process.Ac);
-                        break;
-                    case Operators.LOAD:
-                        process.LoadAc(value);
+				var op = (Operators)int.Parse(operador);
+				var logString = Program.LogOperation(op);
 
-                        // Log
-                        logString = string.Format(logString, process.Ac, operando);
-                        break;
-                    case Operators.STORE:
-                        memory.Set(int.Parse(operando), process.Ac.ToString());
+				// verifica se é acesso imediato
+				if (operando.Contains("#"))
+				{
+					// remove o indicador de acesso imediato
+					int.TryParse(operando.Replace("#", string.Empty), out value);
+				}
+				// verifica se é acesso direto
+				else if (op != Operators.SYSCALL && int.TryParse(operando, out value))
+				{
+					// recupera valor do bloco de dados
+					value = int.Parse(memory.Get(value));
+				}
+				else if (op == Operators.SYSCALL)
+				{
 
-                        // Log
-                        logString = string.Format(logString, process.Ac, operando);
-                        break;
-                    case Operators.BRANY:
-                        process.JumpTo(int.Parse(operando));
+				}
+				else
+				{
+					continue;
+				}
 
-                        // Log
-                        logString = string.Format(logString, int.Parse(operando).ToString("X"));
-                        break;
-                    case Operators.BRPOS:
-                        if (process.Ac > 0)
-                        {
-                            process.JumpTo(int.Parse(operando));
-                        }
+				// Executa a operação
+				switch (op)
+				{
+					case Operators.ADD:
+						process.LoadAc(process.Ac + value);
 
-                        // Log
-                        logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
-                        break;
-                    case Operators.BRZERO:
-                        if (process.Ac == 0)
-                        {
-                            process.JumpTo(int.Parse(operando));
-                        }
+						// Log
+						logString = string.Format(logString, value, process.Ac);
+						break;
+					case Operators.SUB:
+						process.LoadAc(process.Ac - value);
 
-                        // Log
-                        logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
-                        break;
-                    case Operators.BRNEG:
-                        if (process.Ac < 0)
-                        {
-                            process.JumpTo(int.Parse(operando));
-                        }
+						// Log
+						logString = string.Format(logString, value, process.Ac);
+						break;
+					case Operators.MULT:
+						process.LoadAc(process.Ac * value);
 
-                        // Log
-                        logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
-                        break;
-                    case Operators.SYSCALL:
-                        // TODO: Rever funcionalidade
-                        if (value == 0)
-                        {
-                            processando = false;
+						// Log
+						logString = string.Format(logString, value, process.Ac);
+						break;
+					case Operators.DIV:
+						process.LoadAc(process.Ac / value);
 
-                            // Log
-                            logString = string.Format(logString, "HALT");
-                        }
-                        else
-                        {
-                            // Log
-                            logString = string.Format(logString, "?");
-                        }
-                        break;
-                    default:
-                        //throw new Exception("Better Call Saul!");
-                        break;
-                }
+						// Log
+						logString = string.Format(logString, value, process.Ac);
+						break;
+					case Operators.LOAD:
+						process.LoadAc(value);
 
-                Console.WriteLine(logString);
-            }
-        }
+						// Log
+						logString = string.Format(logString, process.Ac, operando);
+						break;
+					case Operators.STORE:
+						memory.Set(int.Parse(operando), process.Ac.ToString());
+
+						// Log
+						logString = string.Format(logString, process.Ac, operando);
+						break;
+					case Operators.BRANY:
+						process.JumpTo(int.Parse(operando));
+
+						// Log
+						logString = string.Format(logString, int.Parse(operando).ToString("X"));
+						break;
+					case Operators.BRPOS:
+						if (process.Ac > 0)
+						{
+							process.JumpTo(int.Parse(operando));
+						}
+
+						// Log
+						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
+						break;
+					case Operators.BRZERO:
+						if (process.Ac == 0)
+						{
+							process.JumpTo(int.Parse(operando));
+						}
+
+						// Log
+						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
+						break;
+					case Operators.BRNEG:
+						if (process.Ac < 0)
+						{
+							process.JumpTo(int.Parse(operando));
+						}
+
+						// Log
+						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
+						break;
+					case Operators.SYSCALL:
+						// TODO: Rever funcionalidade
+						if (value == 0)
+						{
+							process.JumpTo(process.EndCode);
+							processando = false;
+
+							// Log
+							logString = string.Format(logString, "HALT");
+						}
+						else
+						{
+							// Log
+							logString = string.Format(logString, "?");
+						}
+						break;
+					default:
+						//throw new Exception("Better Call Saul!");
+						break;
+				}
+
+				Console.WriteLine(logString);
+
+				control++;
+			}
+
+			if (process.HasNext() && control == quantum)
+				AddToQueue(process);
+
+			Console.WriteLine();
+		}
 	}
 }

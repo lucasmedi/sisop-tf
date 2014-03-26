@@ -1,6 +1,5 @@
-﻿
-using sisop_tf.Enums;
-using System;
+﻿using System;
+
 namespace sisop_tf
 {
 	public class Process
@@ -9,27 +8,31 @@ namespace sisop_tf
 		public int BeginCode { get; private set; }
 		public int EndCode { get; private set; }
 
-        public int Id { get; set; }
+		public int Id { get; private set; }
 		public int Pc { get; private set; }
 		public int Ac { get; private set; }
 
-        public int AT { get; set; }
-        public int PT { get; set; }
-        public int TT { get; set; }
-        
-        public Priority priority { get; set; }
+		public int At { get; private set; }
+		public int Pt { get; private set; }
+
+		public int Wt { get; set; }
+		public int Tt { get; set; }
+
+		public Priority Priority { get; set; }
 
 		public Process(int beginData, int beginCode, int endCode, int arriveTime = 0, Priority prior = Priority.Baixa)
-		{            
+		{
+			Id = new Random(DateTime.Now.Millisecond).Next();
+
 			BeginData = beginData;
 			BeginCode = beginCode;
 			EndCode = endCode;
-            PT = (endCode - beginCode)/2;
-            
-            AT = arriveTime;
-            priority = prior;           
 
-			Pc = beginCode;
+			Priority = prior;
+
+			Pc = BeginCode;
+			At = arriveTime;
+			Pt = (endCode - beginCode) / 2;
 		}
 
 		public void Next()
