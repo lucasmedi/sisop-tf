@@ -18,9 +18,11 @@ namespace sisop_tf
 		public int Wt { get; set; }
 		public int Tt { get; set; }
 
+        public int ProgramSize { get; set; }
+
 		public Priority Priority { get; set; }
 
-		public Process(int beginData, int beginCode, int endCode, int arriveTime = 0, Priority prior = Priority.Baixa)
+        public Process(int beginData, int beginCode, int endCode, int programSize, int arriveTime = 0, Priority prior = Priority.Baixa)
 		{
 			Id = new Random(DateTime.Now.Millisecond).Next();
 
@@ -33,6 +35,8 @@ namespace sisop_tf
 			Pc = BeginCode;
 			At = arriveTime;
 			Pt = (endCode - beginCode) / 2;
+
+            ProgramSize = programSize;
 		}
 
 		public void Next()
