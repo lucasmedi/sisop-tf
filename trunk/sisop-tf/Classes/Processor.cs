@@ -221,7 +221,7 @@ namespace sisop_tf
 			if (bloqueado)
 			{
                 process.State = State.Blocked;
-                process.At = new Random().Next(10, 40);
+                process.At = totalTime + new Random().Next(10, 40);
 				// Bloquear processo por tempo determinado
 			}
 			else if (process.HasNext() && control == quantum)
