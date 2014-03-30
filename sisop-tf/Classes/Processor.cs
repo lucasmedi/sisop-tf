@@ -23,9 +23,13 @@ namespace sisop_tf
 		public void AddToQueue(Process p)
 		{
 			// TODO: Adicionar tratamento, verificando se há espaço na memória
-
 			processing.Enqueue(p);
 		}
+
+        private void AddToWaiting(Process p)
+        {
+            waiting.Add(p);
+        }
 
 		public Process GetNext()
 		{
