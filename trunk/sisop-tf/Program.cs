@@ -35,6 +35,9 @@ namespace sisop_tf
 				processor.Execute();
 			}
 
+			// Log: estado da memória
+			ImprimeMemoria();
+
 			Console.ReadKey();
 		}
 
