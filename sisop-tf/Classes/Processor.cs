@@ -6,16 +6,14 @@ namespace sisop_tf
 	public class Processor
 	{
 		private Memory memory { get; set; }
-        private Memory mainMemory { get; set; }
 		private int quantum { get; set; }
 
 		private Queue<Process> processing { get; set; }
 		private List<Process> waiting { get; set; }
 
-        public Processor(Memory mem, Memory main, int qtn = 5)
+		public Processor(Memory mem, int qtn = 5)
 		{
 			memory = mem;
-            mainMemory = main;
 			quantum = qtn;
 
 			processing = new Queue<Process>();
@@ -25,48 +23,9 @@ namespace sisop_tf
 		public void AddToQueue(Process p)
 		{
 			// TODO: Adicionar tratamento, verificando se há espaço na memória
-            if (mainMemory.GetFreeMemorySize() >= p.ProgramSize)
-            {
-                if (waiting.Contains(p))
-                    waiting.Remove(p);
 
-                processing.Enqueue(p);
-                MoveToMainMemory(p);
-            }
-            else
-                waiting.Add(p);
+			processing.Enqueue(p);
 		}
-
-        private void MoveToMainMemory(Process p)
-        {
-            //Valida se tem espaco partindo do primeiro espaco vazio na memoria
-            var countNullConsecutivos = 0;
-            var indexInicial = 0;
-            for (var i = 0; i < mainMemory.GetSize(); i++)
-            {
-                if (string.IsNullOrEmpty(mainMemory.Get(i)))
-                    countNullConsecutivos++;
-                else
-                {
-                    indexInicial = i - countNullConsecutivos;
-                    countNullConsecutivos = 0;
-                }
-
-                if (countNullConsecutivos == p.ProgramSize)
-                {
-                    var codeLine = p.BeginData;
-                    var j = (indexInicial != 0) ? indexInicial + 1 : indexInicial;
-                    var size = p.ProgramSize;
-                    while (size > 0)
-                    {                        
-                        mainMemory.Set(j, memory.Get(codeLine));
-                        codeLine++;
-                        j++;
-                        size--;
-                    }
-                }
-            }            
-        }
 
 		public Process GetNext()
 		{
@@ -75,33 +34,8 @@ namespace sisop_tf
 
 		public bool IsEmpty()
 		{
-            List<Process> actualWaiting = new List<Process>();
-            actualWaiting = waiting;
-
-            if (processing.Count == 0)
-            {
-                waiting.ForEach(x => {
-                    if (x.Priority == Priority.Alta)
-                        AddToQueue(x);
-                    else if(x.Priority == Priority.Medio)
-                        AddToQueue(x);
-                    else
-                        AddToQueue(x);
-
-                    //actualWaiting.Remove(x);
-                });
-            }
-
-            waiting = actualWaiting;
-
-			return processing.Count == 0 && waiting.Count == 0;
+			return processing.Count == 0;
 		}
-
-        public void RemoveFromMainMemory(Process p)
-        {
-            //for (int i = p.BeginCode - 1; i < p.EndCode; i++)
-            //    mainMemory.Set(i, null);
-        }
 
 		public void Execute()
 		{
@@ -116,11 +50,8 @@ namespace sisop_tf
 			while (processando)
 			{
 				processando = process.HasNext() && control < quantum;
-                if (!processando)
-                {
-                    RemoveFromMainMemory(process);
-                    continue;
-                }
+				if (!processando)
+					continue;
 
 				int value = -1;
 
@@ -251,8 +182,9 @@ namespace sisop_tf
 				control++;
 			}
 
-            //if (process.HasNext() && control == quantum)
-            //    AddToQueue(process);
+			
+            if (process.HasNext() && control == quantum)
+				AddToQueue(process);
 
 			Console.WriteLine();
 		}

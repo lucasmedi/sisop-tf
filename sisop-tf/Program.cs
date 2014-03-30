@@ -8,18 +8,15 @@ namespace sisop_tf
 	class Program
 	{
 		// Blocos do programa
-		private static Memory memoryLoadFiles;
-        private static Memory mainMemory;
+		private static Memory memory;
         private static Processor processor;
 
 		static void Main(string[] args)
 		{
-            //Diferentes memorias, para o conteudo dos arquivos e para a execucao dos processos
-			memoryLoadFiles = new Memory(64);
-            mainMemory = new Memory(30);
+			memory = new Memory();
 
 			// Cria o processador para os processos da fila
-            processor = new Processor(memoryLoadFiles, mainMemory);
+			processor = new Processor(memory);
 
 			string[] filePaths = Directory.GetFiles(@"..\..\Files\", "*.asm");
 			for (int i = 0; i < filePaths.Length; i++)
@@ -123,8 +120,6 @@ namespace sisop_tf
 
 		private static Process Read(string filePath)
 		{
-            //Tamanho de linhas do programa(sem quebrar)
-            var programLines = 0;
 			// Variáveis de controle de abertura e fechamento de bloco
 			var openDataRead = false;
 			var openCodeRead = false;
@@ -156,7 +151,7 @@ namespace sisop_tf
 			}
 
 			// Guarda a primeira posição de data
-			int beginData = memoryLoadFiles.GetIndex();
+			int beginData = memory.GetIndex();
 
 			// Inicia o carregamento do arquivo
 			foreach (var line in precode)
@@ -179,13 +174,13 @@ namespace sisop_tf
 				if (openDataRead)
 				{
 					var s = line.Trim().Split(' ');
-					memoryLoadFiles.Add(s[1]);
-					dataIndex.Add(s[0], memoryLoadFiles.GetIndex() - 1);
+					memory.Add(s[1]);
+					dataIndex.Add(s[0], memory.GetIndex() - 1);
 				}
 			}
 
 			// Guarda a última posição de data / primeira posição de código
-			int beginCode = memoryLoadFiles.GetIndex();
+			int beginCode = memory.GetIndex();
 			int pc = -1;
 
 			foreach (var line in precode)
@@ -193,7 +188,7 @@ namespace sisop_tf
 				// Se possui .code abre leitura de código
 				if (line.Contains(".code"))
 				{
-					pc = memoryLoadFiles.GetIndex();
+					pc = memory.GetIndex();
 					openCodeRead = true;
 					continue;
 				}
@@ -212,8 +207,6 @@ namespace sisop_tf
 					var operador = 0;
 					var valor = 1;
 
-                    //Contabiliza dias linhas no programa
-                    programLines = programLines + 2;
 					var s = line.Trim().Split(' ');
 
 					// Se possui mais de 2 posições é tratado como LABEL
@@ -223,33 +216,33 @@ namespace sisop_tf
 						operador = 1;
 						valor = 2;
 
-						labels.Add(s[0].Replace(":", string.Empty), memoryLoadFiles.GetIndex());
+						labels.Add(s[0].Replace(":", string.Empty), memory.GetIndex());
 					}
 
 					// Busca código do operador
 					var op = (int)operators[s[operador]];
 
-					memoryLoadFiles.Add(op.ToString());
+					memory.Add(op.ToString());
 
 					if (dataIndex.ContainsKey(s[valor]))
 					{
-						memoryLoadFiles.Add(dataIndex[s[valor]].ToString());
+						memory.Add(dataIndex[s[valor]].ToString());
 					}
 					else if (labels.ContainsKey(s[valor]))
 					{
-						memoryLoadFiles.Add(labels[s[valor]].ToString());
+						memory.Add(labels[s[valor]].ToString());
 					}
 					else
 					{
-						memoryLoadFiles.Add(s[valor]);
+						memory.Add(s[valor]);
 					}
 				}
 			}
 
 			// Guarda a última posição de código
-			int endCode = memoryLoadFiles.GetIndex() -1;
+			int endCode = memory.GetIndex() -1;
 
-			var process = new Process(beginData, beginCode, endCode, programLines);
+			var process = new Process(beginData, beginCode, endCode);
 			process.JumpTo(pc);
             
 			return process;
@@ -258,9 +251,9 @@ namespace sisop_tf
 		private static void ImprimeMemoria(int icount = 0)
 		{
 			Console.WriteLine("Imprimir estado da memória");
-			while (memoryLoadFiles.HasNext(icount))
+			while (memory.HasNext(icount))
 			{
-				var o = memoryLoadFiles.Get(icount);
+				var o = memory.Get(icount);
 				var i = 0;
 				if (int.TryParse(o, out i))
 				{

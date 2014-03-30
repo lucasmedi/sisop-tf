@@ -6,9 +6,9 @@ namespace sisop_tf
 		private string[] memory;
 		private int key;
 
-		public Memory(int size)
+		public Memory()
 		{
-            memory = new string[size];
+			memory = new string[64];
 			key = 0;
 		}
 
@@ -32,20 +32,6 @@ namespace sisop_tf
 		{
 			return key;
 		}
-
-        public int GetFreeMemorySize()
-        {
-            int linesLoaded = 0;
-            for (int i = 0; i < memory.Length; i++)
-                if(!string.IsNullOrEmpty(memory[i])) linesLoaded++;
-
-            return memory.Length - linesLoaded;
-        }
-
-        public int GetSize()
-        {
-            return memory.Length;
-        }
 
 		/// <summary>
 		/// Somente para testes.
