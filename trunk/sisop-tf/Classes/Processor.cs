@@ -24,7 +24,6 @@ namespace sisop_tf
 
 		public void AddToQueue(Process p)
 		{
-			// TODO: Adicionar tratamento, verificando se há espaço na memória
 			processing.Enqueue(p);
 		}
 
@@ -56,9 +55,7 @@ namespace sisop_tf
 			// Executa programa
 			while (processando)
 			{
-                totalTime++;
-
-				processando = process.HasNext() && control < quantum;
+                processando = process.HasNext() && control < quantum;
 				if (!processando)
 					continue;
 
@@ -219,6 +216,15 @@ namespace sisop_tf
 				control++;
 			}
 
+			if (control == quantum)
+			{
+				totalTime += quantum;
+			}
+			else
+			{
+				totalTime += control;
+			}
+
 			if (bloqueado)
 			{
                 process.State = State.Blocked;
@@ -233,6 +239,8 @@ namespace sisop_tf
 			{
 				Deallocate(process);
 			}
+
+
 
 			Console.WriteLine();
 		}
