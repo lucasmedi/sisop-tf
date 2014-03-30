@@ -46,6 +46,7 @@
     <Compile Include="Classes\Process.cs" />
     <Compile Include="Classes\Processor.cs" />
     <Compile Include="Enums\Priority.cs" />
+    <Compile Include="Enums\State.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

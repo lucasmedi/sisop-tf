@@ -158,7 +158,6 @@ namespace sisop_tf
 						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
 						break;
 					case Operators.SYSCALL:
-						// TODO: Rever funcionalidade
 						switch (value)
 						{
 							case 0:
@@ -236,7 +235,7 @@ namespace sisop_tf
 		{
 			for (int i = process.BeginData; i <= process.EndCode; i++)
 			{
-				this.memory.Set(i, String.Empty);
+				this.memory.Set(i, null);
 			}
 
 			Console.WriteLine("Desalocou o processo {0} da memória principal.", process.Id);
