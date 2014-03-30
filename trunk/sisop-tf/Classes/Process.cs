@@ -12,8 +12,8 @@ namespace sisop_tf
 		public int Pc { get; private set; }
 		public int Ac { get; private set; }
 
-		public int At { get; private set; }
-		public int Pt { get; private set; }
+		public int At { get; set; }
+		public int Pt { get; set; }
 
 		public int Wt { get; set; }
 		public int Tt { get; set; }

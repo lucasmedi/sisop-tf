@@ -11,6 +11,8 @@ namespace sisop_tf
 		private Queue<Process> processing { get; set; }
 		private List<Process> waiting { get; set; }
 
+        private int totalTime = -1;
+
 		public Processor(Memory mem, int qtn = 5)
 		{
 			memory = mem;
@@ -54,6 +56,8 @@ namespace sisop_tf
 			// Executa programa
 			while (processando)
 			{
+                totalTime++;
+
 				processando = process.HasNext() && control < quantum;
 				if (!processando)
 					continue;
@@ -217,6 +221,8 @@ namespace sisop_tf
 
 			if (bloqueado)
 			{
+                process.State = State.Blocked;
+                process.At = new Random().Next(10, 40);
 				// Bloquear processo por tempo determinado
 			}
 			else if (process.HasNext() && control == quantum)
