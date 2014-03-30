@@ -19,8 +19,9 @@ namespace sisop_tf
 		public int Tt { get; set; }
 
 		public Priority Priority { get; set; }
+        public State State { get; set; }
 
-		public Process(int beginData, int beginCode, int endCode, int arriveTime = 0, Priority prior = Priority.Baixa)
+		public Process(int beginData, int beginCode, int endCode, int arriveTime = 0, Priority prior = Priority.Baixa, State state = State.New)
 		{
 			Id = new Random(DateTime.Now.Millisecond).Next();
 
@@ -29,6 +30,7 @@ namespace sisop_tf
 			EndCode = endCode;
 
 			Priority = prior;
+            State = state;
 
 			Pc = BeginCode;
 			At = arriveTime;
