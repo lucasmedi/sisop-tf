@@ -216,14 +216,7 @@ namespace sisop_tf
 				control++;
 			}
 
-			if (control == quantum)
-			{
-				totalTime += quantum;
-			}
-			else
-			{
-				totalTime += control;
-			}
+			totalTime += control;
 
 			if (bloqueado)
 			{
