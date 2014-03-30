@@ -9,9 +9,11 @@ namespace sisop_tf.Enums
     public enum State
     {
         New = 0,
-        Blocked = 1,
-        Suspended = 2,
-        Running = 3,
-        Exit = 4
+        Ready = 1,
+        ReadySuspend = 2,
+        Blocked = 3,
+        BlockedSuspend = 4,
+        Running = 5,
+        Exit = 6
     }
 }
