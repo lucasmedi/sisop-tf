@@ -41,6 +41,7 @@ namespace sisop_tf
 		{
 			int control = 0;
 			var processando = true;
+			var bloqueado = false;
 
 			var process = GetNext();
 
@@ -77,7 +78,7 @@ namespace sisop_tf
 				}
 				else if (op == Operators.SYSCALL)
 				{
-
+					int.TryParse(operando, out value);
 				}
 				else
 				{
@@ -158,19 +159,48 @@ namespace sisop_tf
 						break;
 					case Operators.SYSCALL:
 						// TODO: Rever funcionalidade
-						if (value == 0)
+						switch (value)
 						{
-							process.JumpTo(process.EndCode);
-							processando = false;
+							case 0:
+								process.JumpTo(process.EndCode);
+								
+								// Log
+								logString = string.Format(logString, "HALT");
+								break;
+							case 1:
+								Console.WriteLine("Impressão do AC: {0}", process.Ac);
 
-							// Log
-							logString = string.Format(logString, "HALT");
+								// Bloqueia processo
+								bloqueado = true;
+
+								// Log
+								logString = string.Format(logString, "OUTPUT: " + process.Ac);
+								break;
+							case 2:
+								bool aceito = false;
+								do
+								{
+									Console.Write("Leitura para AC: ");
+									var input = Console.ReadLine();
+									aceito = int.TryParse(input, out value);
+
+									if (!aceito)
+										Console.WriteLine("Valor inválido!");
+								} while (!aceito);
+
+								process.LoadAc(value);
+								
+								// Bloqueia processo
+								bloqueado = true;
+
+								// Log
+								logString = string.Format(logString, "INPUT: {0}", value);
+								break;
 						}
-						else
-						{
-							// Log
-							logString = string.Format(logString, "?");
-						}
+
+						// finaliza o processamento
+						processando = false;
+
 						break;
 					default:
 						//throw new Exception("Better Call Saul!");
@@ -182,7 +212,9 @@ namespace sisop_tf
 				control++;
 			}
 
-			
+			//if (bloqueado)
+				// Bloquear processo por tempo determinado
+
             if (process.HasNext() && control == quantum)
 				AddToQueue(process);
 
