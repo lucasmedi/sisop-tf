@@ -212,13 +212,34 @@ namespace sisop_tf
 				control++;
 			}
 
-			//if (bloqueado)
+			if (bloqueado)
+			{
 				// Bloquear processo por tempo determinado
-
-            if (process.HasNext() && control == quantum)
+			}
+			else if (process.HasNext() && control == quantum)
+			{
 				AddToQueue(process);
+			}
+			else
+			{
+				Deallocate(process);
+			}
 
 			Console.WriteLine();
+		}
+
+		/// <summary>
+		/// Remove o processo informado da memória
+		/// </summary>
+		/// <param name="process">Processo a ser removido</param>
+		private void Deallocate(Process process)
+		{
+			for (int i = process.BeginData; i <= process.EndCode; i++)
+			{
+				this.memory.Set(i, String.Empty);
+			}
+
+			Console.WriteLine("Desalocou o processo {0} da memória principal.", process.Id);
 		}
 	}
 }
