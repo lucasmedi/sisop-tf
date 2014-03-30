@@ -30,7 +30,6 @@ namespace sisop_tf
 				processor.AddToQueue(process);
 			}
 
-			int j = 0;
 			while (!processor.IsEmpty())
 			{
 				processor.Execute();
