@@ -25,9 +25,39 @@ namespace sisop_tf
 			// Cria a memória com o tamanho informado
 			memory = new Memory(memorySize);
 
-			// Cria o processador para os processos da fila
-			processor = new Processor(memory);
+			// Solicita o modo de escalonamento
+			Nullable<SchedulerType> scheduler = null;
+			do
+			{
+				var value = -1;
+				Console.Write("Informe o modo de escalonamento (0 - SJF Preemptivo, 1 - Round Robin): ");
+				if (int.TryParse(Console.ReadLine(), out value))
+				{
+					switch (value)
+					{
+						case 0:
+							scheduler = SchedulerType.SJF_P;
+							break;
+						case 1:
+							scheduler = SchedulerType.RoundRobin;
+							break;
+					}
+				}
+			} while (!scheduler.HasValue);
 
+			// Cria o processador para os processos da fila conforme o tipo informado
+			switch (scheduler.Value)
+			{
+				case SchedulerType.SJF_P:
+					processor = new ProcessorSJFP(memory);
+					break;
+				case SchedulerType.RoundRobin:
+					processor = new ProcessorRobin(memory);
+					break;
+				default:
+					break;
+			}
+			
 			Console.WriteLine("Passo 1: carregar arquivos");
 			string[] filePaths = Directory.GetFiles(@"..\..\Files\", "*.asm");
 			for (int i = 0; i < filePaths.Length; i++)
@@ -49,7 +79,7 @@ namespace sisop_tf
 				do
 				{
 					var value = -1;
-					Console.Write("Informe a prioridade do processo (0 - Alta, 1 - Media, 2): ");
+					Console.Write("Informe a prioridade do processo (0 - Alta, 1 - Media, 2 - Baixa): ");
 					if (int.TryParse(Console.ReadLine(), out value))
 					{
 						switch (value)
