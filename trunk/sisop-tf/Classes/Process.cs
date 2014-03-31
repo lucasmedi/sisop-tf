@@ -21,20 +21,34 @@ namespace sisop_tf
 		public Priority Priority { get; set; }
         public State State { get; set; }
 
-		public Process(int beginData, int beginCode, int endCode, int arriveTime = 0, Priority prior = Priority.Baixa, State state = State.New)
+		public bool IsLoaded { get; set; }
+		public string FilePath { get; set; }
+
+		public int Size { get; set; }
+		
+		public Process(string filePath, int at, Priority prior, State state = State.New)
 		{
 			Id = new Random(DateTime.Now.Millisecond).Next();
 
+			FilePath = filePath;
+
+			Priority = prior;
+			State = state;
+			At = at;
+
+			IsLoaded = false;
+		}
+
+		public void SetParameters(int beginData, int beginCode, int endCode)
+		{
 			BeginData = beginData;
 			BeginCode = beginCode;
 			EndCode = endCode;
 
-			Priority = prior;
-            State = state;
-
 			Pc = BeginCode;
-			At = arriveTime;
 			Pt = (endCode - beginCode) / 2;
+
+			IsLoaded = true;
 		}
 
 		public void Next()

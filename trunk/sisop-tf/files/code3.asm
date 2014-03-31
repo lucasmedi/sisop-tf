@@ -1,5 +1,4 @@
 .code
-SYSCALL 0
 LOAD var1
 ADD var2
 STORE var3
