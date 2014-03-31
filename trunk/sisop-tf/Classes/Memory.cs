@@ -22,16 +22,32 @@ namespace sisop_tf
 			Size = size;
 		}
 
+		/// <summary>
+		/// Busca valor a partir de uma posição
+		/// </summary>
+		/// <param name="key"></param>
+		/// <returns></returns>
 		public string GetValue(int key)
 		{
 			return memory[key];
 		}
 
+		/// <summary>
+		/// Seta valor na posição informada
+		/// </summary>
+		/// <param name="key"></param>
+		/// <param name="value"></param>
 		public void SetValue(int key, string value)
 		{
 			memory[key] = value;
 		}
 
+		/// <summary>
+		/// Verifica se existe o espaço informado
+		/// </summary>
+		/// <param name="size">Tamanho a ser verificado</param>
+		/// <param name="position">Valor da posição inicial do espaço, se houver</param>
+		/// <returns>Verdadeiro se existe espaço</returns>
 		public bool HasSpace(int size, out int position)
 		{
 			var startPosition = -1;

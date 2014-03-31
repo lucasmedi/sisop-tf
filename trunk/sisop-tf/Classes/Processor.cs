@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace sisop_tf
 {
@@ -9,19 +9,13 @@ namespace sisop_tf
 	{
 		private Memory memory { get; set; }
 		private int quantum { get; set; }
+		private int totalTime = 0;
 
 		private Queue<Process> processing { get; set; }
 		private List<Process> waiting { get; set; }
 
 		private Random random;
-
-        private int totalTime = 0;
-
-		/// <summary>
-		/// Construtor do processador
-		/// </summary>
-		/// <param name="mem"></param>
-		/// <param name="qtn"></param>
+        
 		public Processor(Memory mem, int qtn = 5)
 		{
 			memory = mem;
@@ -30,7 +24,7 @@ namespace sisop_tf
 			processing = new Queue<Process>();
 			waiting = new List<Process>();
 
-			random = new Random(10 * 40);
+			random = new Random(new Random().Next(0, 1000000));
 		}
 
 		#region Controling
@@ -83,6 +77,8 @@ namespace sisop_tf
 		/// </summary>
 		public void Execute()
 		{
+			Console.WriteLine("Tempo Total: {0}\n", totalTime);
+
 			OrganizeWaiting();
 
 			int control = 0;
@@ -219,7 +215,7 @@ namespace sisop_tf
 								process.JumpTo(process.EndCode);
 								
 								// Log
-								logString = string.Format(logString, "HALT");
+								logString = string.Format(logString, "HALT - PROCESSO TERMINADO");
 								break;
 							case 1:
 								Console.WriteLine("Impressão do AC: {0}", process.Ac);
@@ -277,7 +273,7 @@ namespace sisop_tf
 					process.At = totalTime + waitTime;
 					AddToWaiting(process);
 
-					Console.WriteLine("Bloqueia processo {0} por {1} unidade de tempo", process.Id, waitTime);
+					Console.WriteLine("Bloqueia processo {0} com AT para {1}", process.Id, process.At);
 				}
 				else if (process.HasNext() && control == quantum)
 				{
@@ -292,8 +288,6 @@ namespace sisop_tf
 
 				Console.WriteLine();
 			}
-
-			OrganizeWaiting();
 		}
 
 		/// <summary>
@@ -315,10 +309,9 @@ namespace sisop_tf
 		/// </summary>
 		private void OrganizeWaiting()
 		{
-			waiting = waiting.OrderBy(o => o.Priority).ToList<Process>();
-
 			var removed = new List<Process>();
 
+			waiting = waiting.OrderBy(o => o.Priority).ToList<Process>();
 			foreach (var process in waiting)
 			{
 				if (process.Size > memory.Size)
@@ -372,6 +365,12 @@ namespace sisop_tf
 			}
 		}
 
+		/// <summary>
+		/// Lê o arquivo carregando os dados para a memória principal
+		/// </summary>
+		/// <param name="process">Processo que está sendo carregado</param>
+		/// <param name="position">Posição inicial de escrita na memória</param>
+		/// <returns></returns>
 		private Process Read(Process process, int position)
 		{
 			// Define o ponto inicial a carregado o programa
@@ -390,7 +389,7 @@ namespace sisop_tf
 			var labels = new Dictionary<string, int>();
 
 			// Log: nome do arquivo a ser executado
-			Console.WriteLine("> Inicia leitura do arquivo '{0}'", process.FilePath);
+			Console.WriteLine("> Carregamento do processo {0}. Arquivo: '{1}'", process.Id, process.FilePath);
 
 			// Carrega código do arquivo .asm
 			var file = new StreamReader(process.FilePath);
@@ -506,12 +505,17 @@ namespace sisop_tf
 			process.JumpTo(pc);
 
 			// Imprime o espaço alocado pelo processo na memória
-			Program.ImprimeMemoria(process.BeginData);
+			Program.MemoryPreview(process.BeginData, process.Id);
 			Console.WriteLine();
 
 			return process;
 		}
 
+		/// <summary>
+		/// Calcula o espaço necessário para o processo, simulando o carregamento em uma memória auxiliar
+		/// </summary>
+		/// <param name="process">Processo a ser avialiado</param>
+		/// <returns></returns>
 		private int PreRead(Process process)
 		{
 			var preMemory = new Memory();
@@ -646,6 +650,10 @@ namespace sisop_tf
 
 		#region Custom
 
+		/// <summary>
+		/// Cria lista de operadores para auxiliar na leitura do arquivo
+		/// </summary>
+		/// <returns></returns>
 		private static Dictionary<string, int> CreateOperators()
 		{
 			/*
