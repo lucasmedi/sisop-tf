@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace sisop_tf
 {
 	class Program
 	{
-		// Blocos do programa
 		private static Memory memory;
         private static Processor processor;
 
@@ -73,57 +71,31 @@ namespace sisop_tf
 				processor.AddToWaiting(process);
 			}
 
+			Console.WriteLine();
+
 			while (!processor.IsEmpty())
 			{
 				processor.Execute();
 			}
 
 			// Log: estado da memória
-			ImprimeMemoria();
-
-			Console.ReadKey();
-		}
-
-		private static void Start()
-		{
-			// Performance
-			var watch = new Stopwatch();
-			watch.Start();
-
-			Console.WriteLine("> Instancia variáveis de ambiente");
-
-			// Log: fim do carregamento do arquivo e início do processamento
-			watch.Stop();
-			Console.WriteLine("Fim passo 1 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
-
-			Console.WriteLine();
-
-			ImprimeMemoria();
-			Console.WriteLine("Passo 2: executar processamento");
-
-			watch.Reset();
-			watch.Start();
-
-			Console.WriteLine("Fim passo 2 - Tempo Total: {0}ms", watch.Elapsed.TotalSeconds * 1000.0);
-
-			// TODO: Rever maneira de gerar um print dos dados
-			//Console.WriteLine();
-
-			//Console.WriteLine("Listar resultado das variáveis");
-			//foreach (var item in dataIndex)
-			//{
-			//	Console.WriteLine("> '{0}': {1}", Convert.ToString(item.Value, 2).PadLeft(8, '0'), memory.Get(item.Value));
-			//}
-			//Console.WriteLine("Fim listar");
+			MemoryPreview();
 
 			Console.WriteLine();
 
 			Console.WriteLine("**** HALT! *****");
+
+			Console.ReadKey();
 		}
 
-		public static void ImprimeMemoria(int icount = 0)
+		public static void MemoryPreview(int icount = 0, int id = 0)
 		{
-			Console.WriteLine("Imprimir estado da memória");
+			if (id == 0)
+				Console.WriteLine("Imprimir estado da memória");
+			else
+				Console.WriteLine("Imprimir estado da memória do processo {0}", id);
+
+			var preview = new StringBuilder();
 			while (memory.HasNext(icount))
 			{
 				var o = memory.GetValue(icount);
@@ -133,10 +105,20 @@ namespace sisop_tf
 					o = i.ToString("X");
 				}
 
-				Console.WriteLine("> {0}: {1}", icount.ToString("X").PadLeft(8, '0'), o);
+				preview.AppendLine(string.Format("> {0}: {1}", icount.ToString("X").PadLeft(8, '0'), o));
 
 				icount++;
 			}
+
+			if (!string.IsNullOrEmpty(preview.ToString()))
+			{
+				Console.Write(preview.ToString());
+			}
+			else
+			{
+				Console.WriteLine("> Memória vazia");
+			}
+
 			Console.WriteLine("Fim imprimir");
 		}
 
