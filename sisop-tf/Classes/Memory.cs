@@ -6,31 +6,30 @@ namespace sisop_tf
 		private string[] memory;
 		private int key;
 
+		public int Size { get; private set; }
+
 		public Memory()
 		{
-			memory = new string[64];
+			memory = new string[1024];
 			key = 0;
 		}
 
-		public void Add(string value)
+		public Memory(int size)
 		{
-			memory[key] = value;
-			key++;
+			memory = new string[size];
+			key = 0;
+
+			Size = size;
 		}
 
-		public void Set(int key, string value)
-		{
-			memory[key] = value;
-		}
-
-		public string Get(int key)
+		public string GetValue(int key)
 		{
 			return memory[key];
 		}
 
-		public int GetIndex()
+		public void SetValue(int key, string value)
 		{
-			return key;
+			memory[key] = value;
 		}
 
 		public bool HasSpace(int size, out int position)
