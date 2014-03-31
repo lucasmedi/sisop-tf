@@ -5,21 +5,19 @@ using System.Linq;
 
 namespace sisop_tf
 {
-	public class Processor
+	public abstract class Processor
 	{
-		private Memory memory { get; set; }
-		private int quantum { get; set; }
-		private int totalTime = 0;
+		protected Memory memory { get; set; }
+		protected int totalTime = 0;
 
-		private Queue<Process> processing { get; set; }
-		private List<Process> waiting { get; set; }
+		protected Queue<Process> processing { get; set; }
+		protected List<Process> waiting { get; set; }
 
-		private Random random;
+		protected Random random;
         
-		public Processor(Memory mem, int qtn = 5)
+		public Processor(Memory mem)
 		{
 			memory = mem;
-			quantum = qtn;
 
 			processing = new Queue<Process>();
 			waiting = new List<Process>();
@@ -75,226 +73,18 @@ namespace sisop_tf
 		/// <summary>
 		/// Executa um processo da fila
 		/// </summary>
-		public void Execute()
-		{
-			Console.WriteLine("Tempo Total: {0}\n", totalTime);
+		public abstract void Execute();
 
-			OrganizeWaiting();
-
-			int control = 0;
-			var isProcessing = true;
-			var blocked = false;
-			
-			Process process = null;
-			if (processing.Count > 0)
-			{
-				process = GetNext();
-				process.State = State.Running;
-				Console.WriteLine("Processando: {0}", process.Id);
-			}
-			else
-			{
-				control = quantum;
-				isProcessing = false;
-			}
-
-			// Executa programa
-			while (isProcessing)
-			{
-                isProcessing = process.HasNext() && control < quantum;
-				if (!isProcessing)
-					continue;
-
-				int value = -1;
-
-				var operador = memory.GetValue(process.Pc);
-				process.Next();
-				var operando = memory.GetValue(process.Pc);
-				process.Next();
-
-				var op = (Operators)int.Parse(operador);
-				var logString = Program.LogOperation(op);
-
-				// verifica se é acesso imediato
-				if (operando.Contains("#"))
-				{
-					// remove o indicador de acesso imediato
-					int.TryParse(operando.Replace("#", string.Empty), out value);
-				}
-				// verifica se é acesso direto
-				else if (op != Operators.SYSCALL && int.TryParse(operando, out value))
-				{
-					// recupera valor do bloco de dados
-					value = int.Parse(memory.GetValue(value));
-				}
-				else if (op == Operators.SYSCALL)
-				{
-					int.TryParse(operando, out value);
-				}
-				else
-				{
-					continue;
-				}
-
-				// Executa a operação
-				switch (op)
-				{
-					case Operators.ADD:
-						process.LoadAc(process.Ac + value);
-
-						// Log
-						logString = string.Format(logString, value, process.Ac);
-						break;
-					case Operators.SUB:
-						process.LoadAc(process.Ac - value);
-
-						// Log
-						logString = string.Format(logString, value, process.Ac);
-						break;
-					case Operators.MULT:
-						process.LoadAc(process.Ac * value);
-
-						// Log
-						logString = string.Format(logString, value, process.Ac);
-						break;
-					case Operators.DIV:
-						process.LoadAc(process.Ac / value);
-
-						// Log
-						logString = string.Format(logString, value, process.Ac);
-						break;
-					case Operators.LOAD:
-						process.LoadAc(value);
-
-						// Log
-						logString = string.Format(logString, process.Ac, operando);
-						break;
-					case Operators.STORE:
-						memory.SetValue(int.Parse(operando), process.Ac.ToString());
-
-						// Log
-						logString = string.Format(logString, process.Ac, operando);
-						break;
-					case Operators.BRANY:
-						process.JumpTo(int.Parse(operando));
-
-						// Log
-						logString = string.Format(logString, int.Parse(operando).ToString("X"));
-						break;
-					case Operators.BRPOS:
-						if (process.Ac > 0)
-						{
-							process.JumpTo(int.Parse(operando));
-						}
-
-						// Log
-						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
-						break;
-					case Operators.BRZERO:
-						if (process.Ac == 0)
-						{
-							process.JumpTo(int.Parse(operando));
-						}
-
-						// Log
-						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
-						break;
-					case Operators.BRNEG:
-						if (process.Ac < 0)
-						{
-							process.JumpTo(int.Parse(operando));
-						}
-
-						// Log
-						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
-						break;
-					case Operators.SYSCALL:
-						switch (value)
-						{
-							case 0:
-								process.JumpTo(process.EndCode);
-								
-								// Log
-								logString = string.Format(logString, "HALT - PROCESSO TERMINADO");
-								break;
-							case 1:
-								Console.WriteLine("Impressão do AC: {0}", process.Ac);
-
-								// Bloqueia processo
-								blocked = true;
-
-								// Log
-								logString = string.Format(logString, "OUTPUT: " + process.Ac);
-								break;
-							case 2:
-								bool aceito = false;
-								do
-								{
-									Console.Write("Leitura para AC: ");
-									var input = Console.ReadLine();
-									aceito = int.TryParse(input, out value);
-
-									if (!aceito)
-										Console.WriteLine("Valor inválido!");
-								} while (!aceito);
-
-								process.LoadAc(value);
-								
-								// Bloqueia processo
-								blocked = true;
-
-								// Log
-								logString = string.Format(logString, "INPUT: {0}", value);
-								break;
-						}
-
-						// finaliza o processamento
-						isProcessing = false;
-
-						break;
-					default:
-						//throw new Exception("Better Call Saul!");
-						break;
-				}
-
-				Console.WriteLine(logString);
-
-				control++;
-			}
-
-			totalTime += control;
-
-			if (process != null)
-			{
-				if (blocked)
-				{
-					process.State = State.Blocked;
-					var waitTime = random.Next(10, 40);
-					process.At = totalTime + waitTime;
-					AddToWaiting(process);
-
-					Console.WriteLine("Bloqueia processo {0} com AT para {1}", process.Id, process.At);
-				}
-				else if (process.HasNext() && control == quantum)
-				{
-					process.State = State.Ready;
-					AddToQueue(process);
-				}
-				else
-				{
-					process.State = State.Exit;
-					Deallocate(process);
-				}
-
-				Console.WriteLine();
-			}
-		}
+		/// <summary>
+		/// Organiza execução dos processos
+		/// </summary>
+		public abstract void OrganizeWaiting();
 
 		/// <summary>
 		/// Remove o processo informado da memória
 		/// </summary>
 		/// <param name="process">Processo a ser removido</param>
-		private void Deallocate(Process process)
+		protected void Deallocate(Process process)
 		{
 			for (int i = process.BeginData; i <= process.EndCode; i++)
 			{
@@ -305,73 +95,12 @@ namespace sisop_tf
 		}
 
 		/// <summary>
-		/// Organiza execução dos processos
-		/// </summary>
-		private void OrganizeWaiting()
-		{
-			var removed = new List<Process>();
-
-			waiting = waiting.OrderBy(o => o.Priority).ToList<Process>();
-			foreach (var process in waiting)
-			{
-				if (process.Size > memory.Size)
-				{
-					removed.Add(process);
-					Console.WriteLine("Processo {0} ignorado por falta de espaço na memória principal.", process.Id);
-					Console.WriteLine();
-					continue;
-				}
-
-				if ((process.State == State.New || process.State == State.ReadySuspend) && process.At <= totalTime)
-				{
-					var position = -1;
-					if (memory.HasSpace(process.Size, out position))
-					{
-						// Adiciona para remoção da waiting
-						removed.Add(process);
-
-						// Carrega na memória
-						Read(process, position);
-
-						// Altera estado para State.Ready
-						process.State = State.Ready;
-
-						// Adiciona na fila
-						AddToQueue(process);
-					}
-					else
-					{
-						// Altera estado para State.ReadySuspend
-						process.State = State.ReadySuspend;
-					}
-				}
-
-				if (process.State == State.Blocked && process.At <= totalTime)
-				{
-					// Adiciona para remoção da waiting
-					removed.Add(process);
-
-					// Altera estado para State.Ready
-					process.State = State.Ready;
-
-					// Adiciona na fila
-					AddToQueue(process);
-				}
-			}
-
-			foreach (var item in removed)
-			{
-				waiting.Remove(item);
-			}
-		}
-
-		/// <summary>
 		/// Lê o arquivo carregando os dados para a memória principal
 		/// </summary>
 		/// <param name="process">Processo que está sendo carregado</param>
 		/// <param name="position">Posição inicial de escrita na memória</param>
 		/// <returns></returns>
-		private Process Read(Process process, int position)
+		protected Process Read(Process process, int position)
 		{
 			// Define o ponto inicial a carregado o programa
 			var key = position;
@@ -516,7 +245,7 @@ namespace sisop_tf
 		/// </summary>
 		/// <param name="process">Processo a ser avialiado</param>
 		/// <returns></returns>
-		private int PreRead(Process process)
+		protected int PreRead(Process process)
 		{
 			var preMemory = new Memory();
 			var key = 0;

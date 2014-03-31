@@ -42,9 +42,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes\Memory.cs" />
+    <Compile Include="Classes\Processor.cs" />
+    <Compile Include="Classes\ProcessorSJFP.cs" />
+    <Compile Include="Enums\SchedulerType.cs" />
     <Compile Include="Enums\Operators.cs" />
     <Compile Include="Classes\Process.cs" />
-    <Compile Include="Classes\Processor.cs" />
+    <Compile Include="Classes\ProcessorRobin.cs" />
     <Compile Include="Enums\Priority.cs" />
     <Compile Include="Enums\State.cs" />
     <Compile Include="Program.cs" />
