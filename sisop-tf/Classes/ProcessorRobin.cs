@@ -8,7 +8,8 @@ namespace sisop_tf
 	{
 		private int quantum { get; set; }
 
-		public ProcessorRobin(Memory mem, int qtn = 5) : base(mem)
+		public ProcessorRobin(Memory mem, int qtn = 5)
+			: base(mem)
 		{
 			quantum = qtn;
 		}
@@ -18,216 +19,221 @@ namespace sisop_tf
 		/// </summary>
 		public override void Execute()
 		{
-			Console.WriteLine("Tempo Total: {0}\n", totalTime);
-
-			OrganizeWaiting();
-
-			int control = 0;
-			var isProcessing = true;
-			var blocked = false;
-			
-			Process process = null;
-			if (processing.Count > 0)
+			while (!IsEmpty())
 			{
-				process = GetNext();
-				process.State = State.Running;
-				Console.WriteLine("Processando: {0}", process.Id);
-			}
-			else
-			{
-				control = quantum;
-				isProcessing = false;
-			}
+				Console.WriteLine("Tempo Total: {0}\n", totalTime);
 
-			// Executa programa
-			while (isProcessing)
-			{
-                isProcessing = process.HasNext() && control < quantum;
-				if (!isProcessing)
-					continue;
+				OrganizeWaiting();
 
-				int value = -1;
+				int control = 0;
+				var isProcessing = true;
+				var blocked = false;
 
-				var operador = memory.GetValue(process.Pc);
-				process.Next();
-				var operando = memory.GetValue(process.Pc);
-				process.Next();
-
-				var op = (Operators)int.Parse(operador);
-				var logString = Program.LogOperation(op);
-
-				// verifica se é acesso imediato
-				if (operando.Contains("#"))
+				Process process = null;
+				if (processing.Count > 0)
 				{
-					// remove o indicador de acesso imediato
-					int.TryParse(operando.Replace("#", string.Empty), out value);
-				}
-				// verifica se é acesso direto
-				else if (op != Operators.SYSCALL && int.TryParse(operando, out value))
-				{
-					// recupera valor do bloco de dados
-					value = int.Parse(memory.GetValue(value));
-				}
-				else if (op == Operators.SYSCALL)
-				{
-					int.TryParse(operando, out value);
+					process = GetNext();
+					process.State = State.Running;
+					Console.WriteLine("Processando: {0}", process.Id);
 				}
 				else
 				{
-					continue;
+					control = quantum;
+					isProcessing = false;
 				}
 
-				// Executa a operação
-				switch (op)
+				// Executa programa
+				while (isProcessing)
 				{
-					case Operators.ADD:
-						process.LoadAc(process.Ac + value);
+					isProcessing = process.HasNext() && control < quantum;
+					if (!isProcessing)
+						continue;
 
-						// Log
-						logString = string.Format(logString, value, process.Ac);
-						break;
-					case Operators.SUB:
-						process.LoadAc(process.Ac - value);
+					int value = -1;
 
-						// Log
-						logString = string.Format(logString, value, process.Ac);
-						break;
-					case Operators.MULT:
-						process.LoadAc(process.Ac * value);
+					var operador = memory.GetValue(process.Pc);
+					process.Next();
+					var operando = memory.GetValue(process.Pc);
+					process.Next();
 
-						// Log
-						logString = string.Format(logString, value, process.Ac);
-						break;
-					case Operators.DIV:
-						process.LoadAc(process.Ac / value);
+					var op = (Operators)int.Parse(operador);
+					var logString = Program.LogOperation(op);
 
-						// Log
-						logString = string.Format(logString, value, process.Ac);
-						break;
-					case Operators.LOAD:
-						process.LoadAc(value);
+					// verifica se é acesso imediato
+					if (operando.Contains("#"))
+					{
+						// remove o indicador de acesso imediato
+						int.TryParse(operando.Replace("#", string.Empty), out value);
+					}
+					// verifica se é acesso direto
+					else if (op != Operators.SYSCALL && int.TryParse(operando, out value))
+					{
+						// recupera valor do bloco de dados
+						value = int.Parse(memory.GetValue(value));
+					}
+					else if (op == Operators.SYSCALL)
+					{
+						int.TryParse(operando, out value);
+					}
+					else
+					{
+						continue;
+					}
 
-						// Log
-						logString = string.Format(logString, process.Ac, operando);
-						break;
-					case Operators.STORE:
-						memory.SetValue(int.Parse(operando), process.Ac.ToString());
+					// Executa a operação
+					switch (op)
+					{
+						case Operators.ADD:
+							process.LoadAc(process.Ac + value);
 
-						// Log
-						logString = string.Format(logString, process.Ac, operando);
-						break;
-					case Operators.BRANY:
-						process.JumpTo(int.Parse(operando));
+							// Log
+							logString = string.Format(logString, value, process.Ac);
+							break;
+						case Operators.SUB:
+							process.LoadAc(process.Ac - value);
 
-						// Log
-						logString = string.Format(logString, int.Parse(operando).ToString("X"));
-						break;
-					case Operators.BRPOS:
-						if (process.Ac > 0)
-						{
+							// Log
+							logString = string.Format(logString, value, process.Ac);
+							break;
+						case Operators.MULT:
+							process.LoadAc(process.Ac * value);
+
+							// Log
+							logString = string.Format(logString, value, process.Ac);
+							break;
+						case Operators.DIV:
+							process.LoadAc(process.Ac / value);
+
+							// Log
+							logString = string.Format(logString, value, process.Ac);
+							break;
+						case Operators.LOAD:
+							process.LoadAc(value);
+
+							// Log
+							logString = string.Format(logString, process.Ac, operando);
+							break;
+						case Operators.STORE:
+							memory.SetValue(int.Parse(operando), process.Ac.ToString());
+
+							// Log
+							logString = string.Format(logString, process.Ac, operando);
+							break;
+						case Operators.BRANY:
 							process.JumpTo(int.Parse(operando));
-						}
 
-						// Log
-						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
-						break;
-					case Operators.BRZERO:
-						if (process.Ac == 0)
-						{
-							process.JumpTo(int.Parse(operando));
-						}
+							// Log
+							logString = string.Format(logString, int.Parse(operando).ToString("X"));
+							break;
+						case Operators.BRPOS:
+							if (process.Ac > 0)
+							{
+								process.JumpTo(int.Parse(operando));
+							}
 
-						// Log
-						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
-						break;
-					case Operators.BRNEG:
-						if (process.Ac < 0)
-						{
-							process.JumpTo(int.Parse(operando));
-						}
+							// Log
+							logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
+							break;
+						case Operators.BRZERO:
+							if (process.Ac == 0)
+							{
+								process.JumpTo(int.Parse(operando));
+							}
 
-						// Log
-						logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
-						break;
-					case Operators.SYSCALL:
-						switch (value)
-						{
-							case 0:
-								process.JumpTo(process.EndCode);
-								
-								// Log
-								logString = string.Format(logString, "HALT - PROCESSO TERMINADO");
-								break;
-							case 1:
-								Console.WriteLine("Impressão do AC: {0}", process.Ac);
+							// Log
+							logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
+							break;
+						case Operators.BRNEG:
+							if (process.Ac < 0)
+							{
+								process.JumpTo(int.Parse(operando));
+							}
 
-								// Bloqueia processo
-								blocked = true;
+							// Log
+							logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
+							break;
+						case Operators.SYSCALL:
+							switch (value)
+							{
+								case 0:
+									process.JumpTo(process.EndCode);
 
-								// Log
-								logString = string.Format(logString, "OUTPUT: " + process.Ac);
-								break;
-							case 2:
-								bool aceito = false;
-								do
-								{
-									Console.Write("Leitura para AC: ");
-									var input = Console.ReadLine();
-									aceito = int.TryParse(input, out value);
+									// Log
+									logString = string.Format(logString, "HALT - PROCESSO TERMINADO");
+									break;
+								case 1:
+									Console.WriteLine("Impressão do AC: {0}", process.Ac);
 
-									if (!aceito)
-										Console.WriteLine("Valor inválido!");
-								} while (!aceito);
+									// Bloqueia processo
+									blocked = true;
 
-								process.LoadAc(value);
-								
-								// Bloqueia processo
-								blocked = true;
+									// Log
+									logString = string.Format(logString, "OUTPUT: " + process.Ac);
+									break;
+								case 2:
+									bool aceito = false;
+									do
+									{
+										Console.Write("Leitura para AC: ");
+										var input = Console.ReadLine();
+										aceito = int.TryParse(input, out value);
 
-								// Log
-								logString = string.Format(logString, "INPUT: {0}", value);
-								break;
-						}
+										if (!aceito)
+											Console.WriteLine("Valor inválido!");
+									} while (!aceito);
 
-						// finaliza o processamento
-						isProcessing = false;
+									process.LoadAc(value);
 
-						break;
-					default:
-						//throw new Exception("Better Call Saul!");
-						break;
+									// Bloqueia processo
+									blocked = true;
+
+									// Log
+									logString = string.Format(logString, "INPUT: {0}", value);
+									break;
+							}
+
+							// finaliza o processamento
+							isProcessing = false;
+
+							break;
+						default:
+							//throw new Exception("Better Call Saul!");
+							break;
+					}
+
+					Console.WriteLine(logString);
+
+					control++;
 				}
 
-				Console.WriteLine(logString);
-
-				control++;
-			}
-
-			totalTime += control;
-
-			if (process != null)
-			{
-				if (blocked)
+				totalTime += control;
+				
+				if (process != null)
 				{
-					process.State = State.Blocked;
-					var waitTime = random.Next(10, 40);
-					process.At = totalTime + waitTime;
-					AddToWaiting(process);
+					process.Pt += control;
 
-					Console.WriteLine("Bloqueia processo {0} com AT para {1}", process.Id, process.At);
-				}
-				else if (process.HasNext() && control == quantum)
-				{
-					process.State = State.Ready;
-					AddToQueue(process);
-				}
-				else
-				{
-					process.State = State.Exit;
-					Deallocate(process);
-				}
+					if (blocked)
+					{
+						process.State = State.Blocked;
+						var waitTime = random.Next(10, 40);
+						process.At = totalTime + waitTime;
+						AddToWaiting(process);
 
-				Console.WriteLine();
+						Console.WriteLine("Bloqueia processo {0} com AT para {1}", process.Id, process.At);
+					}
+					else if (process.HasNext() && control == quantum)
+					{
+						process.State = State.Ready;
+						AddToQueue(process);
+					}
+					else
+					{
+						process.State = State.Exit;
+						Deallocate(process);
+					}
+
+					Console.WriteLine();
+				}
 			}
 		}
 
@@ -262,6 +268,9 @@ namespace sisop_tf
 
 						// Altera estado para State.Ready
 						process.State = State.Ready;
+
+						// Altera Processing Time para 0
+						process.Pt = 0;
 
 						// Adiciona na fila
 						AddToQueue(process);
