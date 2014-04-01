@@ -3,7 +3,7 @@ namespace sisop_tf
 {
 	public enum SchedulerType
 	{
-		SJF_P = 0,
-		RoundRobin = 1
+		SJF_P = 1,
+		RoundRobin = 2
 	}
 }

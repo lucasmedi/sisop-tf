@@ -30,15 +30,15 @@ namespace sisop_tf
 			do
 			{
 				var value = -1;
-				Console.Write("Informe o modo de escalonamento (0 - SJF Preemptivo, 1 - Round Robin): ");
+				Console.Write("Informe o modo de escalonamento (1 - SJF Preemptivo, 2 - Round Robin): ");
 				if (int.TryParse(Console.ReadLine(), out value))
 				{
 					switch (value)
 					{
-						case 0:
+						case 1:
 							scheduler = SchedulerType.SJF_P;
 							break;
-						case 1:
+						case 2:
 							scheduler = SchedulerType.RoundRobin;
 							break;
 					}
@@ -103,10 +103,7 @@ namespace sisop_tf
 
 			Console.WriteLine();
 
-			while (!processor.IsEmpty())
-			{
-				processor.Execute();
-			}
+			processor.Execute();
 
 			// Log: estado da memória
 			MemoryPreview();

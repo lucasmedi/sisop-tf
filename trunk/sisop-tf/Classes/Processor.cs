@@ -91,6 +91,12 @@ namespace sisop_tf
 				this.memory.SetValue(i, null);
 			}
 
+			if (process.State == State.Exit)
+			{
+				Console.WriteLine("Término do processamento");
+				Console.WriteLine("Processo {0} - Estatíticas: WT={1} TT={2}", process.Id, process.Wt, process.Tt);
+			}
+
 			Console.WriteLine("Desalocou o processo {0} da memória principal.", process.Id);
 		}
 

@@ -14,9 +14,15 @@ namespace sisop_tf
 
 		public int At { get; set; }
 		public int Pt { get; set; }
-
 		public int Wt { get; set; }
-		public int Tt { get; set; }
+
+		public int Tt
+		{
+			get
+			{
+				return Pt + Wt;
+			}
+		}
 
 		public Priority Priority { get; set; }
         public State State { get; set; }
