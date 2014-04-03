@@ -41,12 +41,15 @@ namespace sisop_tf
 				}
 
 				//isProcessing = process.HasNext() && control < quantum;
-				if (!isProcessing)
-					continue;
+                if (!isProcessing)
+                {
+                    totalTime++;
+                    continue;
+                }
 
 				int value = -1;
-
-				var operador = memory.GetValue(process.Pc);
+                #region Processamento
+                var operador = memory.GetValue(process.Pc);
 				process.Next();
 				var operando = memory.GetValue(process.Pc);
 				process.Next();
@@ -197,34 +200,36 @@ namespace sisop_tf
 				}
 
 				Console.WriteLine(logString);
-
-				control++;
+                #endregion
+                control++;
 				totalTime++;
 
-				//if (process != null)
-				//{
-				//	if (blocked)
-				//	{
-				//		process.State = State.Blocked;
-				//		var waitTime = random.Next(10, 40);
-				//		process.At = totalTime + waitTime;
-				//		AddToWaiting(process);
+                if (process != null)
+                {
+                    process.LastPc = process.Pc;
+                    if (blocked)
+                    {
+                        process.State = State.Blocked;
+                        var waitTime = random.Next(10, 40);
+                        process.At = totalTime + waitTime;
+                        AddToWaiting(process);
+                        Deallocate(process);
 
-				//		Console.WriteLine("Bloqueia processo {0} com AT para {1}", process.Id, process.At);
-				//	}
-				//	else if (process.HasNext() && control == quantum)
-				//	{
-				//		process.State = State.Ready;
-				//		AddToQueue(process);
-				//	}
-				//	else
-				//	{
-				//		process.State = State.Exit;
-				//		Deallocate(process);
-				//	}
+                        Console.WriteLine("Bloqueia processo {0} com AT para {1}", process.Id, process.At);
+                    }
+                    else if (process.HasNext())
+                    {
+                        process.State = State.Ready;
+                        AddToQueue(process);
+                    }
+                    else
+                    {
+                        process.State = State.Exit;
+                        Deallocate(process);
+                    }
 
-				//	Console.WriteLine();
-				//}
+                    Console.WriteLine();
+                }
 			}
 		}
 
@@ -234,23 +239,38 @@ namespace sisop_tf
 		public override void OrganizeWaiting()
 		{
 			var removed = new List<Process>();
+            var addedToWaiting = new List<Process>();
 
-			waiting = waiting.OrderBy(o => o.At).ToList<Process>();
+			waiting = waiting.OrderBy(o => o.At).ThenBy(o => o.Priority).ToList<Process>();
 			foreach (var process in waiting)
 			{
 				if (process.Size > memory.Size)
 				{
-					removed.Add(process);
+					//removed.Add(process);
 					Console.WriteLine("Processo {0} ignorado por falta de espaço na memória principal.", process.Id);
 					Console.WriteLine();
 					continue;
 				}
 
-				if ((process.State == State.New || process.State == State.ReadySuspend) && process.At <= totalTime)
+                if ((process.State == State.New || process.State == State.ReadySuspend) && process.At <= totalTime)
 				{
 					var position = -1;
+                    var actualProcess = processing.FirstOrDefault();
+
+                    if (processing.Count > 0 && actualProcess.Size > process.Size)
+                    {
+                        actualProcess.State = State.ReadySuspend;
+                        actualProcess.At = random.Next(10, 40);
+                        addedToWaiting.Add(actualProcess);
+                        Deallocate(actualProcess);
+                        processing.Dequeue();
+                    }
+
+                    if(actualProcess != null)
+                        actualProcess.At = totalTime + 1;
+
 					if (memory.HasSpace(process.Size, out position))
-					{
+					{      
 						// Adiciona para remoção da waiting
 						removed.Add(process);
 
@@ -263,23 +283,30 @@ namespace sisop_tf
 						// Adiciona na fila
 						AddToQueue(process);
 					}
-					else
-					{
-						// Altera estado para State.ReadySuspend
-						process.State = State.ReadySuspend;
-					}
+                    //else
+                    //{
+                    //    // Altera estado para State.ReadySuspend
+                    //    process.State = State.ReadySuspend;
+                    //    addedToWaiting.Add(process);
+                    //}
 				}
 
 				if (process.State == State.Blocked && process.At <= totalTime)
 				{
-					// Adiciona para remoção da waiting
-					removed.Add(process);
+                    var position = -1;
+                    if (memory.HasSpace(process.Size, out position))
+                    {
+                        // Adiciona para remoção da waiting
+                        removed.Add(process);
 
-					// Altera estado para State.Ready
-					process.State = State.Ready;
+                        Read(process, position);
+                        process.Pc = process.LastPc;
+                        // Altera estado para State.Ready
+                        process.State = State.Ready;
 
-					// Adiciona na fila
-					AddToQueue(process);
+                        // Adiciona na fila
+                        AddToQueue(process);
+                    }
 				}
 			}
 
@@ -287,6 +314,10 @@ namespace sisop_tf
 			{
 				waiting.Remove(item);
 			}
+            foreach (var item in addedToWaiting)
+            {
+                waiting.Add(item);
+            }
 		}
 	}
 }
