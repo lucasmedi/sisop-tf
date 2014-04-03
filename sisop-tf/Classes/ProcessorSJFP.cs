@@ -48,7 +48,9 @@ namespace sisop_tf
                 }
 
 				int value = -1;
-                #region Processamento
+
+                #region Executa instrução
+
                 var operador = memory.GetValue(process.Pc);
 				process.Next();
 				var operando = memory.GetValue(process.Pc);
@@ -200,7 +202,9 @@ namespace sisop_tf
 				}
 
 				Console.WriteLine(logString);
+
                 #endregion
+
                 control++;
 				totalTime++;
 
@@ -247,7 +251,7 @@ namespace sisop_tf
 				if (process.Size > memory.Size)
 				{
 					//removed.Add(process);
-					Console.WriteLine("Processo {0} ignorado por falta de espaço na memória principal.", process.Id);
+					Console.WriteLine("Processo {0} ignorado por falta de espaço total na memória principal.", process.Id);
 					Console.WriteLine();
 					continue;
 				}

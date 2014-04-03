@@ -19,6 +19,8 @@ namespace sisop_tf
 		/// </summary>
 		public override void Execute()
 		{
+			OrganizeWaiting();
+
 			while (!IsEmpty())
 			{
 				Console.WriteLine("Tempo Total: {0}\n", totalTime);
@@ -39,12 +41,15 @@ namespace sisop_tf
 				else
 				{
 					control = quantum;
+					totalTime += control;
 					isProcessing = false;
 				}
 
 				// Executa programa
 				while (isProcessing)
 				{
+					OrganizeWaiting();
+
 					isProcessing = process.HasNext() && control < quantum;
 					if (!isProcessing)
 						continue;
@@ -204,9 +209,10 @@ namespace sisop_tf
 					Console.WriteLine(logString);
 
 					control++;
+					totalTime++;
 				}
 
-				totalTime += control;
+				OrganizeWt(control);
 				
 				if (process != null)
 				{
@@ -250,7 +256,7 @@ namespace sisop_tf
 				if (process.Size > memory.Size)
 				{
 					removed.Add(process);
-					Console.WriteLine("Processo {0} ignorado por falta de espaço na memória principal.", process.Id);
+					Console.WriteLine("Processo {0} ignorado por falta de espaço total na memória principal.", process.Id);
 					Console.WriteLine();
 					continue;
 				}
@@ -266,11 +272,17 @@ namespace sisop_tf
 						// Carrega na memória
 						Read(process, position);
 
-						// Altera estado para State.Ready
-						process.State = State.Ready;
-
 						// Altera Processing Time para 0
 						process.Pt = 0;
+
+						if (process.State == State.New && process.At > 0)
+						{
+							// Alterar o WT para o tempo real
+							process.Wt -= (process.At);
+						}
+
+						// Altera estado para State.Ready
+						process.State = State.Ready;
 
 						// Adiciona na fila
 						AddToQueue(process);
@@ -298,6 +310,19 @@ namespace sisop_tf
 			foreach (var item in removed)
 			{
 				waiting.Remove(item);
+			}
+		}
+
+		private void OrganizeWt(int elapsed)
+		{
+			foreach (var p in processing)
+			{
+				p.Wt += elapsed;
+			}
+
+			foreach (var p in waiting)
+			{
+				p.Wt += elapsed;
 			}
 		}
 	}

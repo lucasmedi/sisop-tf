@@ -56,7 +56,7 @@ namespace sisop_tf
 			EndCode = endCode;
 
 			Pc = BeginCode;
-			Pt = (endCode - beginCode) / 2;
+			Pt = ((endCode - beginCode) + 1) / 2;
 
 			IsLoaded = true;
 		}
