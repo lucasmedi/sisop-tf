@@ -9,12 +9,14 @@ namespace sisop_tf
 		public int EndCode { get; private set; }
 
 		public int Id { get; private set; }
-		public int Pc { get; private set; }
+		public int Pc { get; set; }
 		public int Ac { get; private set; }
 
 		public int At { get; set; }
 		public int Pt { get; set; }
 		public int Wt { get; set; }
+
+        public int LastPc { get; set; }
 
 		public int Tt
 		{
@@ -43,6 +45,8 @@ namespace sisop_tf
 			At = at;
 
 			IsLoaded = false;
+
+            LastPc = 0;
 		}
 
 		public void SetParameters(int beginData, int beginCode, int endCode)
@@ -79,7 +83,7 @@ namespace sisop_tf
 
 		public bool HasNext()
 		{
-			return (Pc <= EndCode);
+			return (Pc < EndCode);
 		}
 	}
 }
