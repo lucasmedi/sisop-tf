@@ -15,6 +15,26 @@ namespace sisop_tf
 			Console.WriteLine("**** SISOP - Etapa 1 *****");
 			Console.WriteLine();
 
+			try
+			{
+				Execute();
+			}
+			catch (DirectoryNotFoundException)
+			{
+				Console.WriteLine("Erro: pasta ou arquivos .asm não encontrados.");
+				Console.WriteLine("Pressione qualquer tecla para finalizar.");
+			}
+			catch (Exception)
+			{
+				Console.WriteLine("\nErro ao executar aplicação!");
+				Console.WriteLine("Pressione qualquer tecla para finalizar.");
+			}
+
+			Console.ReadKey();
+		}
+
+		public static void Execute()
+		{
 			// Solicita tamanho da memória
 			var memorySize = -1;
 			do
@@ -59,7 +79,7 @@ namespace sisop_tf
 			}
 			
 			Console.WriteLine("Passo 1: carregar arquivos");
-			string[] filePaths = Directory.GetFiles(@"..\..\Files\", "*.asm");
+			string[] filePaths = Directory.GetFiles(@"Files\", "*.asm");
 			for (int i = 0; i < filePaths.Length; i++)
 			{
 				var filePath = filePaths[i];
