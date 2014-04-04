@@ -79,7 +79,7 @@ namespace sisop_tf
 			}
 			
 			Console.WriteLine("Passo 1: carregar arquivos");
-			string[] filePaths = Directory.GetFiles(@"Files\", "*.asm");
+			string[] filePaths = Directory.GetFiles(@"..\..\Files\", "*.asm");
 			for (int i = 0; i < filePaths.Length; i++)
 			{
 				var filePath = filePaths[i];
