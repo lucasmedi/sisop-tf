@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes\Memory.cs" />
+    <Compile Include="Classes\Page.cs" />
     <Compile Include="Classes\Processor.cs" />
     <Compile Include="Classes\ProcessorSJFP.cs" />
     <Compile Include="Enums\SchedulerType.cs" />
