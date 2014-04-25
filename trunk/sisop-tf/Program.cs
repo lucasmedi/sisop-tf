@@ -1,4 +1,6 @@
-﻿using System;
+﻿using sisop_tf.Classes;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -7,6 +9,7 @@ namespace sisop_tf
 	class Program
 	{
 		private static Memory memory;
+        private static List<Page> pages;
         private static Processor processor;
 
 		static void Main(string[] args)
@@ -36,14 +39,25 @@ namespace sisop_tf
 		public static void Execute()
 		{
 			// Solicita tamanho da memória
-			var memorySize = -1;
+            var pageSize = -1;
+            do
+            {
+                Console.Write("Informe o tamanho da página: ");
+            } while (!int.TryParse(Console.ReadLine(), out pageSize) || pageSize <= 0);
+
+			var qtdPages = -1;
 			do
 			{
-				Console.Write("Informe o tamanho da memória principal: ");
-			} while (!int.TryParse(Console.ReadLine(), out memorySize) || memorySize <= 0);
+				Console.Write("Informe a quantidade de páginas: ");
+            } while (!int.TryParse(Console.ReadLine(), out qtdPages) || qtdPages <= 0);
 
 			// Cria a memória com o tamanho informado
-			memory = new Memory(memorySize);
+            memory = new Memory(pageSize * qtdPages);
+
+            //Cria as páginas solicitadas ao usuário
+            pages = new List<Page>();
+            for(int i = 0; i < qtdPages; i++)
+                pages.Add(new Page(pageSize, pageSize * i, PageState.Empty));
 
 			// Solicita o modo de escalonamento
 			Nullable<SchedulerType> scheduler = null;
