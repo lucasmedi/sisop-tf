@@ -227,5 +227,31 @@ namespace sisop_tf
 
 			return log;
 		}
+
+        //Verifica se o bloco tá vazio.
+        public bool hasSpacePage(int position)
+        {
+            foreach (Page p in pages)
+            {
+                if (p.PosInMemory == position || position <= p.PosInMemory + (p.Size-1))
+                {
+                    return p.State != PageState.Full;
+                }
+            }
+
+            return false;
+        }
+
+        //Imprime estrutura de páginas
+        public static void printPages()
+        {
+            int cont = 0;
+            foreach (Page p in pages)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Bloco " + cont + ": "+ p.PosInMemory + "até" + (p.PosInMemory + p.Size - 1));
+                //Verificar questão de imprimir a página ocupada por processo.(Só tem empty e full)
+            }
+        }
 	}
 }
