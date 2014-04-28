@@ -88,5 +88,6 @@ namespace sisop_tf
 		{
 			return !string.IsNullOrEmpty(memory[key]);
 		}
+
 	}
 }

@@ -20,7 +20,7 @@ namespace sisop_tf.Classes
         }
     }
 
-    enum PageState
+    public enum PageState
     {
         Full = 0,
         Empty = 1
