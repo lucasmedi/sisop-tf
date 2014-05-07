@@ -104,12 +104,13 @@ namespace sisop_tf
         /// Lê o arquivo carregando os dados para a memória principal
         /// </summary>
         /// <param name="process">Processo que está sendo carregado</param>
-        /// <param name="position">Posição inicial de escrita na memória</param>
+        /// <param name="pageNumber">Posição inicial de escrita na memória</param>
         /// <returns></returns>
-        protected Process Read(Process process, int position)
+        protected Process Read(Process process, int pageNumber)
         {
             // Define o ponto inicial a carregado o programa
-            var key = position;
+            var page = pageNumber;
+            var index = 0;
 
             // Variáveis de controle de abertura e fechamento de bloco
             var openDataRead = false;
@@ -142,7 +143,7 @@ namespace sisop_tf
             }
 
             // Guarda a primeira posição de data
-            int beginData = key;
+            int beginData = index;
 
             // Inicia o carregamento do arquivo
             foreach (var line in precode)
@@ -165,14 +166,14 @@ namespace sisop_tf
                 if (openDataRead)
                 {
                     var s = line.Trim().Split(' ');
-                    memory.SetValue(key, s[1]);
-                    key++;
-                    dataIndex.Add(s[0], key - 1);
+                    memory.SetValue(index, s[1]);
+                    index++;
+                    dataIndex.Add(s[0], index - 1);
                 }
             }
 
             // Guarda a última posição de data / primeira posição de código
-            int beginCode = key;
+            int beginCode = index;
             int pc = -1;
 
             foreach (var line in precode)
@@ -180,7 +181,7 @@ namespace sisop_tf
                 // Se possui .code abre leitura de código
                 if (line.Contains(".code"))
                 {
-                    pc = key;
+                    pc = index;
                     openCodeRead = true;
                     continue;
                 }
@@ -208,34 +209,34 @@ namespace sisop_tf
                         operador = 1;
                         valor = 2;
 
-                        labels.Add(s[0].Replace(":", string.Empty), key);
+                        labels.Add(s[0].Replace(":", string.Empty), index);
                     }
 
                     // Busca código do operador
                     var op = (int)operators[s[operador]];
 
-                    memory.SetValue(key, op.ToString());
-                    key++;
+                    memory.SetValue(index, op.ToString());
+                    index++;
 
                     if (dataIndex.ContainsKey(s[valor]))
                     {
-                        memory.SetValue(key, dataIndex[s[valor]].ToString());
+                        memory.SetValue(index, dataIndex[s[valor]].ToString());
                     }
                     else if (labels.ContainsKey(s[valor]))
                     {
-                        memory.SetValue(key, labels[s[valor]].ToString());
+                        memory.SetValue(index, labels[s[valor]].ToString());
                     }
                     else
                     {
-                        memory.SetValue(key, s[valor]);
+                        memory.SetValue(index, s[valor]);
                     }
 
-                    key++;
+                    index++;
                 }
             }
 
             // Guarda a última posição de código
-            int endCode = key - 1;
+            int endCode = index - 1;
             process.SetParameters(beginData, beginCode, endCode);
             process.JumpTo(pc);
 

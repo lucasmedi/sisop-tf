@@ -3,15 +3,22 @@ namespace sisop_tf
 {
     public class Page
     {
+        public int Id { get; set; }
+
         public int Size { get; set; }
-        public int PosInMemory { get; set; }
+        public int FirstPosition { get; set; }
+
+        public int Pc { get; set; }
         public PageState State { get; set; }
 
-        public Page(int size, int initialPosInMemory, PageState state)
+        public Page(int pageId, int size, int firstPosition, PageState state)
         {
-            PosInMemory = initialPosInMemory;
-            State = state;
+            Id = pageId;
             Size = size;
+            FirstPosition = firstPosition;
+            State = state;
+
+            Pc = 0;
         }
     }
 

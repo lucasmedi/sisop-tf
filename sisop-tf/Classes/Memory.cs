@@ -34,7 +34,7 @@ namespace sisop_tf
             // Cria as páginas solicitadas ao usuário
             pages = new List<Page>();
             for (int i = 0; i < numPages; i++)
-                pages.Add(new Page(tamPage, tamPage * i, PageState.Empty));
+                pages.Add(new Page(i, tamPage, tamPage * i, PageState.Empty));
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace sisop_tf
         /// <param name="size">Tamanho a ser verificado</param>
         /// <param name="page">Primeira página disponível, se houver</param>
         /// <returns>Verdadeiro se existe espaço</returns>
-        public bool HasSpace(int size, out Page page)
+        public bool HasSpace(int size, out int page)
         {
             // Calcula o número de páginas à verificar
             var tam = size / PageSize;
@@ -109,9 +109,15 @@ namespace sisop_tf
             var count = pages.Count(o => o.State == PageState.Empty);
 
             // Pega a primeira página livre
-            page = pages.Where(o => o.State == PageState.Empty).FirstOrDefault();
+            page = pages.Where(o => o.State == PageState.Empty).FirstOrDefault().Id;
 
             return (tam <= count);
+        }
+
+        public Page GetNextEmptyPage()
+        {
+            // Pega a primeira página livre
+            return pages.Where(o => o.State == PageState.Empty).FirstOrDefault();
         }
 
         /// <summary>
