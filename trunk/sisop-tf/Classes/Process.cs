@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace sisop_tf
 {
@@ -33,6 +34,8 @@ namespace sisop_tf
         public string FilePath { get; set; }
 
         public int Size { get; set; }
+
+        public List<int> Pages { get; set; }
         
         public Process(string filePath, int at, Priority prior, State state = State.New)
         {
