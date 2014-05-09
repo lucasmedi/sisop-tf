@@ -4,10 +4,8 @@ namespace sisop_tf
     public class Page
     {
         public int Id { get; set; }
-
         public int Size { get; set; }
         public int FirstPosition { get; set; }
-
         public int Pc { get; set; }
         public PageState State { get; set; }
 
@@ -17,7 +15,6 @@ namespace sisop_tf
             Size = size;
             FirstPosition = firstPosition;
             State = state;
-
             Pc = 0;
         }
     }

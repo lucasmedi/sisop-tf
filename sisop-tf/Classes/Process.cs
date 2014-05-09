@@ -37,6 +37,11 @@ namespace sisop_tf
 
         public List<int> Pages { get; set; }
         
+        public int var()
+        { int var = Pages[0];
+          return var;      
+        }
+        
         public Process(string filePath, int at, Priority prior, State state = State.New)
         {
             Id = new Random(DateTime.Now.Millisecond).Next();
