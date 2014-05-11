@@ -1,6 +1,0 @@
-C:\Users\LIS\Desktop\sisop\bin\Debug\sisop-tf.exe.config
-C:\Users\LIS\Desktop\sisop\bin\Debug\sisop-tf.exe
-C:\Users\LIS\Desktop\sisop\bin\Debug\sisop-tf.pdb
-C:\Users\LIS\Desktop\sisop\obj\Debug\sisop-tf.csprojResolveAssemblyReference.cache
-C:\Users\LIS\Desktop\sisop\obj\Debug\sisop-tf.exe
-C:\Users\LIS\Desktop\sisop\obj\Debug\sisop-tf.pdb
