@@ -1,19 +1,13 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace sisop_tf
+﻿
+namespace sisop_tf.Structure
 {
     public class Memory
     {
         private string[] memory;
-        private List<Page> pages;
 
         private int key;
 
         public int Size { get; private set; }
-
-        public int PageSize { get; private set; }
-        public int NumPages { get; private set; }
 
         public Memory()
         {
@@ -21,20 +15,12 @@ namespace sisop_tf
             key = 0;
         }
 
-        public Memory(int numPages, int tamPage)
+        public Memory(int size)
         {
-            NumPages = numPages;
-            PageSize = tamPage;
-
-            Size = numPages * tamPage;
-
-            key = 0;
+            Size = size;
             memory = new string[Size];
 
-            // Cria as páginas solicitadas ao usuário
-            pages = new List<Page>();
-            for (int i = 0; i < numPages; i++)
-                pages.Add(new Page(i, tamPage, tamPage * i, PageState.Empty));
+            key = 0;
         }
 
         /// <summary>
@@ -55,6 +41,16 @@ namespace sisop_tf
         public void SetValue(int key, string value)
         {
             memory[key] = value;
+        }
+
+        /// <summary>
+        /// Somente para testes.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public bool HasNext(int key)
+        {
+            return !string.IsNullOrEmpty(memory[key]);
         }
 
         /// <summary>
@@ -93,42 +89,6 @@ namespace sisop_tf
         //    position = -1;
         //    return false;
         //}
-
-        /// <summary>
-        /// Verifica se existe o espaço informado
-        /// </summary>
-        /// <param name="size">Tamanho a ser verificado</param>
-        /// <param name="page">Primeira página disponível, se houver</param>
-        /// <returns>Verdadeiro se existe espaço</returns>
-        public bool HasSpace(int size, out int page)
-        {
-            // Calcula o número de páginas à verificar
-            var tam = size / PageSize;
-
-            // Busca número de páginas disponíveis
-            var count = pages.Count(o => o.State == PageState.Empty);
-
-            // Pega a primeira página livre
-            page = pages.Where(o => o.State == PageState.Empty).FirstOrDefault().Id;
-
-            return (tam <= count);
-        }
-
-        public Page GetNextEmptyPage()
-        {
-            // Pega a primeira página livre
-            return pages.Where(o => o.State == PageState.Empty).FirstOrDefault();
-        }
-
-        /// <summary>
-        /// Somente para testes.
-        /// </summary>
-        /// <param name="key"></param>
-        /// <returns></returns>
-        public bool HasNext(int key)
-        {
-            return !string.IsNullOrEmpty(memory[key]);
-        }
 
         //// Imprime estrutura de páginas
         //public void PrintPages()

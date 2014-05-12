@@ -21,7 +21,7 @@ namespace sisop_tf
 
     public enum PageState
     {
-        Full = 0,
-        Empty = 1
+        Free = 0,
+        Occupied = 1
     }
 }

@@ -8,8 +8,8 @@ namespace sisop_tf
     {
         private int quantum { get; set; }
 
-        public ProcessorRobin(Memory mem, int qtn = 5)
-            : base(mem)
+        public ProcessorRobin(PagedMemory memory, int qtn = 5)
+            : base(memory)
         {
             quantum = qtn;
         }
@@ -56,10 +56,13 @@ namespace sisop_tf
 
                     int value = -1;
 
-                    var operador = memory.GetValue(process.Pc);
-                    process.Next();
-                    var operando = memory.GetValue(process.Pc);
-                    process.Next();
+                    // Buscar operador
+                    var operador = memory.GetValue(process.Pg, process.Pc);
+                    process.Next(memory.PageSize);
+                    
+                    // Buscar operando
+                    var operando = memory.GetValue(process.Pg, process.Pc);
+                    process.Next(memory.PageSize);
 
                     var op = (Operators)int.Parse(operador);
                     var logString = Program.LogOperation(op);
@@ -213,7 +216,7 @@ namespace sisop_tf
                 }
 
                 OrganizeWt(control);
-                
+
                 if (process != null)
                 {
                     process.Pt += control;
@@ -263,14 +266,14 @@ namespace sisop_tf
 
                 if ((process.State == State.New || process.State == State.ReadySuspend) && process.At <= totalTime)
                 {
-                    var position = -1;
-                    if (memory.HasSpace(process.Size, out position))
+                    var page = -1;
+                    if (memory.HasSpace(process.Size, out page))
                     {
                         // Adiciona para remoção da waiting
                         removed.Add(process);
 
                         // Carrega na memória
-                        Read(process, position);
+                        Read(process, page);
 
                         // Altera Processing Time para 0
                         process.Pt = 0;
