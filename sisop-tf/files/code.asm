@@ -7,5 +7,5 @@ SYSCALL 0
 .endcode
 
 .data
-variable 15
+variable 10
 .enddata
