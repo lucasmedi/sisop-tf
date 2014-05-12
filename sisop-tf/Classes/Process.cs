@@ -5,11 +5,12 @@ namespace sisop_tf
 {
     public class Process
     {
-        public int BeginData { get; private set; }
-        public int BeginCode { get; private set; }
-        public int EndCode { get; private set; }
+        public KeyValuePair<int, int> BeginData { get; private set; }
+        public KeyValuePair<int, int> BeginCode { get; private set; }
+        public KeyValuePair<int, int> EndCode { get; private set; }
 
         public int Id { get; private set; }
+        public int Pg { get; set; }
         public int Pc { get; set; }
         public int Ac { get; private set; }
 
@@ -37,11 +38,6 @@ namespace sisop_tf
 
         public List<int> Pages { get; set; }
         
-        public int var()
-        { int var = Pages[0];
-          return var;      
-        }
-        
         public Process(string filePath, int at, Priority prior, State state = State.New)
         {
             Id = new Random(DateTime.Now.Millisecond).Next();
@@ -57,30 +53,51 @@ namespace sisop_tf
             LastPc = 0;
         }
 
-        public void SetParameters(int beginData, int beginCode, int endCode)
+        public void AddPage(int pageId)
+        {
+            if (Pages.Contains(pageId))
+                return;
+
+            Pages.Add(pageId);
+        }
+
+        public void SetParameters(KeyValuePair<int, int> beginData, KeyValuePair<int, int> beginCode, KeyValuePair<int, int> endCode, int pt)
         {
             BeginData = beginData;
             BeginCode = beginCode;
             EndCode = endCode;
 
-            Pc = BeginCode;
-            Pt = ((endCode - beginCode) + 1) / 2;
+            Pg = beginCode.Key;
+            Pc = beginCode.Value;
+
+            Pt = pt;
 
             IsLoaded = true;
         }
 
-        public void Next()
+        public void Next(int limit)
         {
             Pc++;
+
+            if (Pc >= limit)
+                NextPage();
         }
 
-        public void JumpTo(int pc)
+        public void NextPage()
         {
-            if (pc < BeginCode && pc > EndCode)
+            var index = Pages.IndexOf(Pg);
+            Pg = Pages[index++];
+            Pc = 0;
+        }
+
+        public void JumpTo(int pg, int pc)
+        {
+            if (!Pages.Contains(pg))
             {
                 throw new ArgumentOutOfRangeException("Fora do intervalo de memória.");
             }
 
+            Pg = pg;
             Pc = pc;
         }
 
@@ -91,7 +108,7 @@ namespace sisop_tf
 
         public bool HasNext()
         {
-            return (Pc < EndCode);
+            return (Pg <= EndCode.Key && Pc <= EndCode.Value);
         }
     }
 }

@@ -7,7 +7,7 @@ namespace sisop_tf
 {
     class Program
     {
-        private static Memory memory;
+        private static PagedMemory memory;
         private static Processor processor;
 
         static void Main(string[] args)
@@ -50,7 +50,7 @@ namespace sisop_tf
             } while (!int.TryParse(Console.ReadLine(), out qtdPages) || qtdPages <= 0);
 
             // Cria a memória com o tamanho informado
-            memory = new Memory(pageSize, qtdPages);
+            memory = new PagedMemory(pageSize, qtdPages);
 
             // Solicita o modo de escalonamento
             Nullable<SchedulerType> scheduler = null;
@@ -76,7 +76,7 @@ namespace sisop_tf
             switch (scheduler.Value)
             {
                 case SchedulerType.SJF_P:
-                    processor = new ProcessorSJFP(memory);
+                    //processor = new ProcessorSJFP(memory);
                     break;
                 case SchedulerType.RoundRobin:
                     processor = new ProcessorRobin(memory);
@@ -86,7 +86,7 @@ namespace sisop_tf
             }
             
             Console.WriteLine("Passo 1: carregar arquivos");
-            string[] filePaths = Directory.GetFiles(@"..\..\Files\", "*.asm");
+            var filePaths = Directory.GetFiles(@"..\..\Files\", "*.asm");
             for (int i = 0; i < filePaths.Length; i++)
             {
                 var filePath = filePaths[i];
@@ -142,26 +142,37 @@ namespace sisop_tf
             Console.ReadKey();
         }
 
-        public static void MemoryPreview(int icount = 0, int id = 0)
+        public static void MemoryPreview(Process p = null)
         {
-            if (id == 0)
+            IList<int> pages = null;
+            if (p == null)
+            {
                 Console.WriteLine("Imprimir estado da memória");
+                pages = p.Pages;
+            }
             else
-                Console.WriteLine("Imprimir estado da memória do processo {0}", id);
+            {
+                Console.WriteLine("Imprimir estado da memória do processo {0}", p.Id);
+                pages = memory.GetPageIds();
+            }
 
             var preview = new StringBuilder();
-            while (memory.HasNext(icount))
+            preview.Append("Format: <Page>-<Line>: <Value>");
+
+            foreach (var pageId in pages)
             {
-                var o = memory.GetValue(icount);
-                var i = 0;
-                if (int.TryParse(o, out i))
+                for (int i = 0; i < memory.PageSize; i++)
                 {
-                    o = i.ToString("X");
+                    var o = memory.GetValue(pageId, i);
+
+                    var n = 0;
+                    if (int.TryParse(o, out i))
+                    {
+                        o = n.ToString("X");
+                    }
+
+                    preview.AppendLine(string.Format("> {0}-{1}: {2}", pageId.ToString("X"), i.ToString("X").PadLeft(8, '0'), o));
                 }
-
-                preview.AppendLine(string.Format("> {0}: {1}", icount.ToString("X").PadLeft(8, '0'), o));
-
-                icount++;
             }
 
             if (!string.IsNullOrEmpty(preview.ToString()))
@@ -220,7 +231,5 @@ namespace sisop_tf
 
             return log;
         }
-
-        
     }
 }

@@ -7,7 +7,7 @@ namespace sisop_tf
 {
     public abstract class Processor
     {
-        protected Memory memory { get; set; }
+        protected PagedMemory memory { get; set; }
         protected int totalTime = 0;
 
         protected Queue<Process> processing { get; set; }
@@ -15,9 +15,9 @@ namespace sisop_tf
 
         protected Random random;
         
-        public Processor(Memory mem)
+        public Processor(PagedMemory memory)
         {
-            memory = mem;
+            this.memory = memory;
 
             processing = new Queue<Process>();
             waiting = new List<Process>();
@@ -86,11 +86,8 @@ namespace sisop_tf
         /// <param name="process">Processo a ser removido</param>
         protected void Deallocate(Process process)
         {
-            for (int i = process.BeginData; i <= process.EndCode; i++)
-            {
-                this.memory.SetValue(i, null);
-            }
-
+            memory.Deallocate(process.Pages);
+        
             if (process.State == State.Exit)
             {
                 Console.WriteLine("Término do processamento");
@@ -108,10 +105,10 @@ namespace sisop_tf
         /// <returns></returns>
         protected Process Read(Process process, int pageNumber)
         {
-            // Define o ponto inicial a carregado o programa
+            // Define o ponto inicial a ser carregado o programa
             var page = pageNumber;
             var index = 0;
-
+            
             // Variáveis de controle de abertura e fechamento de bloco
             var openDataRead = false;
             var openCodeRead = false;
@@ -119,10 +116,11 @@ namespace sisop_tf
             // Carrega lista de operadores
             var operators = CreateOperators();
 
-            var dataIndex = new Dictionary<string, int>();
+            // Dicionário com as posições das variáveis
+            var dataIndex = new Dictionary<string, KeyValuePair<int, int>>();
 
             // Dicionário com as posições das labels
-            var labels = new Dictionary<string, int>();
+            var labels = new Dictionary<string, KeyValuePair<int, int>>();
 
             // Log: nome do arquivo a ser executado
             Console.WriteLine("> Carregamento do processo {0}. Arquivo: '{1}'", process.Id, process.FilePath);
@@ -143,7 +141,7 @@ namespace sisop_tf
             }
 
             // Guarda a primeira posição de data
-            int beginData = index;
+            var beginData = new KeyValuePair<int, int>(page, index);
 
             // Inicia o carregamento do arquivo
             foreach (var line in precode)
@@ -166,22 +164,26 @@ namespace sisop_tf
                 if (openDataRead)
                 {
                     var s = line.Trim().Split(' ');
-                    memory.SetValue(index, s[1]);
+                    var pagePair = memory.SetValue(page, index, s[1]);
+                    page = pagePair.Key;
+                    index = pagePair.Value;
+                    process.AddPage(page);
+                    
+                    dataIndex.Add(s[0], new KeyValuePair<int,int>(page, index));
                     index++;
-                    dataIndex.Add(s[0], index - 1);
                 }
             }
 
             // Guarda a última posição de data / primeira posição de código
-            int beginCode = index;
-            int pc = -1;
+            var codeLinesCount = 0;
+            var firstCodeLine = true;
+            Nullable<KeyValuePair<int, int>> beginCode = null;
 
             foreach (var line in precode)
             {
                 // Se possui .code abre leitura de código
                 if (line.Contains(".code"))
                 {
-                    pc = index;
                     openCodeRead = true;
                     continue;
                 }
@@ -197,51 +199,70 @@ namespace sisop_tf
                 if (openCodeRead)
                 {
                     // Controla posição de leitura
-                    var operador = 0;
-                    var valor = 1;
+                    var posOperator = 0;
+                    var posValue = 1;
 
                     var s = line.Trim().Split(' ');
 
                     // Se possui mais de 2 posições é tratado como LABEL
                     if (s.Length > 2)
                     {
-                        // Desloca posição de leitura
-                        operador = 1;
-                        valor = 2;
+                        // Desloca posições de leitura
+                        posOperator = 1;
+                        posValue = 2;
 
-                        labels.Add(s[0].Replace(":", string.Empty), index);
+                        labels.Add(s[0].Replace(":", string.Empty), new KeyValuePair<int, int>(page, index));
                     }
 
                     // Busca código do operador
-                    var op = (int)operators[s[operador]];
+                    var op = (int)operators[s[posOperator]];
 
-                    memory.SetValue(index, op.ToString());
+                    var pagePair = memory.SetValue(page, index, op.ToString());
+                    page = pagePair.Key;
+                    index = pagePair.Value;
+                    process.AddPage(page);
+
                     index++;
 
-                    if (dataIndex.ContainsKey(s[valor]))
+                    if (dataIndex.ContainsKey(s[posValue]))
                     {
-                        memory.SetValue(index, dataIndex[s[valor]].ToString());
+                        pagePair = memory.SetValue(page, index, dataIndex[s[posValue]]);
+                        page = pagePair.Key;
+                        index = pagePair.Value;
+                        process.AddPage(page);
                     }
-                    else if (labels.ContainsKey(s[valor]))
+                    else if (labels.ContainsKey(s[posValue]))
                     {
-                        memory.SetValue(index, labels[s[valor]].ToString());
+                        pagePair = memory.SetValue(page, index, labels[s[posValue]]);
+                        page = pagePair.Key;
+                        index = pagePair.Value;
+                        process.AddPage(page);
                     }
                     else
                     {
-                        memory.SetValue(index, s[valor]);
+                        pagePair = memory.SetValue(page, index, s[posValue]);
+                        page = pagePair.Key;
+                        index = pagePair.Value;
+                        process.AddPage(page);
+                    }
+
+                    if (firstCodeLine)
+                    {
+                        firstCodeLine = false;
+                        beginCode = new KeyValuePair<int, int>(page, index);
                     }
 
                     index++;
+                    codeLinesCount++;
                 }
             }
 
             // Guarda a última posição de código
-            int endCode = index - 1;
-            process.SetParameters(beginData, beginCode, endCode);
-            process.JumpTo(pc);
+            var endCode = new KeyValuePair<int, int>(page, index - 1);
+            process.SetParameters(beginData, beginCode.Value, endCode, codeLinesCount - 1);
 
             // Imprime o espaço alocado pelo processo na memória
-            Program.MemoryPreview(process.BeginData, process.Id);
+            Program.MemoryPreview(process);
             Console.WriteLine();
 
             return process;
@@ -254,7 +275,7 @@ namespace sisop_tf
         /// <returns></returns>
         protected int PreRead(Process process)
         {
-            var preMemory = new Memory();
+            var preMemory = memory.GetPreMemoryInstance();
             var key = 0;
 
             // Variáveis de controle de abertura e fechamento de bloco
