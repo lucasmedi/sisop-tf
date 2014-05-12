@@ -210,8 +210,6 @@ namespace sisop_tf
                         // Desloca posições de leitura
                         posOperator = 1;
                         posValue = 2;
-
-                        labels.Add(s[0].Replace(":", string.Empty), new KeyValuePair<int, int>(page, index));
                     }
 
                     // Busca código do operador
@@ -222,34 +220,20 @@ namespace sisop_tf
                     index = pagePair.Value;
                     process.AddPage(page);
 
+                    if (posOperator == 1 && posValue == 2)
+                        labels.Add(s[0].Replace(":", string.Empty), new KeyValuePair<int, int>(page, index));
+
                     index++;
 
-                    if (dataIndex.ContainsKey(s[posValue]))
-                    {
-                        pagePair = memory.SetValue(page, index, dataIndex[s[posValue]]);
-                        page = pagePair.Key;
-                        index = pagePair.Value;
-                        process.AddPage(page);
-                    }
-                    else if (labels.ContainsKey(s[posValue]))
-                    {
-                        pagePair = memory.SetValue(page, index, labels[s[posValue]]);
-                        page = pagePair.Key;
-                        index = pagePair.Value;
-                        process.AddPage(page);
-                    }
-                    else
-                    {
-                        pagePair = memory.SetValue(page, index, s[posValue]);
-                        page = pagePair.Key;
-                        index = pagePair.Value;
-                        process.AddPage(page);
-                    }
+                    pagePair = memory.SetValue(page, index, s[posValue]);
+                    page = pagePair.Key;
+                    index = pagePair.Value;
+                    process.AddPage(page);
 
                     if (firstCodeLine)
                     {
                         firstCodeLine = false;
-                        beginCode = new KeyValuePair<int, int>(page, index);
+                        beginCode = new KeyValuePair<int, int>(page, index - 1);
                     }
 
                     index++;
@@ -259,7 +243,8 @@ namespace sisop_tf
 
             // Guarda a última posição de código
             var endCode = new KeyValuePair<int, int>(page, index - 1);
-            process.SetParameters(beginData, beginCode.Value, endCode, codeLinesCount - 1);
+            process.SetDictionaries(dataIndex, labels);
+            process.SetLimiters(beginData, beginCode.Value, endCode, codeLinesCount - 1);
 
             // Imprime o espaço alocado pelo processo na memória
             Program.MemoryPreview(process);
