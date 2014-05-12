@@ -16,20 +16,20 @@ namespace sisop_tf
             Console.WriteLine("**** SISOP - Etapa 1 *****");
             Console.WriteLine();
 
-            //try
-            //{
+            try
+            {
                 Execute();
-            //}
-            //catch (DirectoryNotFoundException)
-            //{
-            //    Console.WriteLine("Erro: pasta ou arquivos .asm não encontrados.");
-            //    Console.WriteLine("Pressione qualquer tecla para finalizar.");
-            //}
-            //catch (Exception)
-            //{
-            //    Console.WriteLine("\nErro ao executar aplicação!");
-            //    Console.WriteLine("Pressione qualquer tecla para finalizar.");
-            //}
+            }
+            catch (DirectoryNotFoundException)
+            {
+                Console.WriteLine("Erro: pasta ou arquivos .asm não encontrados.");
+                Console.WriteLine("Pressione qualquer tecla para finalizar.");
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("\nErro ao executar aplicação!");
+                Console.WriteLine("Pressione qualquer tecla para finalizar.");
+            }
 
             Console.ReadKey();
         }
