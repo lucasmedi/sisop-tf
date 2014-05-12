@@ -9,7 +9,10 @@ namespace sisop_tf
         public KeyValuePair<int, int> BeginCode { get; private set; }
         public KeyValuePair<int, int> EndCode { get; private set; }
 
-        public int Id { get; private set; }
+        public Dictionary<string, KeyValuePair<int, int>> Data { get; private set; }
+        public Dictionary<string, KeyValuePair<int, int>> Labels { get; private set; }
+
+        public string Id { get; private set; }
         public int Pg { get; set; }
         public int Pc { get; set; }
         public int Ac { get; private set; }
@@ -40,7 +43,8 @@ namespace sisop_tf
         
         public Process(string filePath, int at, Priority prior, State state = State.New)
         {
-            Id = new Random(DateTime.Now.Millisecond).Next();
+            var split = filePath.Split('\\');
+            Id = split[split.Length - 1];
 
             FilePath = filePath;
 
@@ -51,6 +55,8 @@ namespace sisop_tf
             IsLoaded = false;
 
             LastPc = 0;
+
+            Pages = new List<int>();
         }
 
         public void AddPage(int pageId)
@@ -61,7 +67,13 @@ namespace sisop_tf
             Pages.Add(pageId);
         }
 
-        public void SetParameters(KeyValuePair<int, int> beginData, KeyValuePair<int, int> beginCode, KeyValuePair<int, int> endCode, int pt)
+        public void SetDictionaries(Dictionary<string, KeyValuePair<int, int>> data, Dictionary<string, KeyValuePair<int, int>> labels)
+        {
+            Data = data;
+            Labels = labels;
+        }
+
+        public void SetLimiters(KeyValuePair<int, int> beginData, KeyValuePair<int, int> beginCode, KeyValuePair<int, int> endCode, int pt)
         {
             BeginData = beginData;
             BeginCode = beginCode;
@@ -86,7 +98,7 @@ namespace sisop_tf
         public void NextPage()
         {
             var index = Pages.IndexOf(Pg);
-            Pg = Pages[index++];
+            Pg = Pages[index + 1];
             Pc = 0;
         }
 
@@ -101,6 +113,11 @@ namespace sisop_tf
             Pc = pc;
         }
 
+        public void JumpTo(KeyValuePair<int, int> pair)
+        {
+            JumpTo(pair.Key, pair.Value);
+        }
+
         public void LoadAc(int value)
         {
             Ac = value;
@@ -108,7 +125,7 @@ namespace sisop_tf
 
         public bool HasNext()
         {
-            return (Pg <= EndCode.Key && Pc <= EndCode.Value);
+            return (Pg < EndCode.Key) || (Pg == EndCode.Key && Pc <= EndCode.Value);
         }
     }
 }

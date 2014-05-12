@@ -45,6 +45,8 @@ namespace sisop_tf
                     isProcessing = false;
                 }
 
+                KeyValuePair<int, int> pair;
+
                 // Executa programa
                 while (isProcessing)
                 {
@@ -59,7 +61,7 @@ namespace sisop_tf
                     // Buscar operador
                     var operador = memory.GetValue(process.Pg, process.Pc);
                     process.Next(memory.PageSize);
-                    
+
                     // Buscar operando
                     var operando = memory.GetValue(process.Pg, process.Pc);
                     process.Next(memory.PageSize);
@@ -74,10 +76,14 @@ namespace sisop_tf
                         int.TryParse(operando.Replace("#", string.Empty), out value);
                     }
                     // verifica se é acesso direto
-                    else if (op != Operators.SYSCALL && int.TryParse(operando, out value))
+                    else if (op != Operators.SYSCALL && !int.TryParse(operando, out value))
                     {
-                        // recupera valor do bloco de dados
-                        value = int.Parse(memory.GetValue(value));
+                        if (process.Data.ContainsKey(operando))
+                        {
+                            // recupera valor do bloco de dados
+                            pair = process.Data[operando];
+                            value = int.Parse(memory.GetValue(pair.Key, pair.Value));
+                        }
                     }
                     else if (op == Operators.SYSCALL)
                     {
@@ -122,43 +128,44 @@ namespace sisop_tf
                             logString = string.Format(logString, process.Ac, operando);
                             break;
                         case Operators.STORE:
-                            memory.SetValue(int.Parse(operando), process.Ac.ToString());
+                            pair = process.Data[operando];
+                            memory.SetValue(pair.Key, pair.Value, process.Ac.ToString());
 
                             // Log
                             logString = string.Format(logString, process.Ac, operando);
                             break;
                         case Operators.BRANY:
-                            process.JumpTo(int.Parse(operando));
+                            process.JumpTo(process.Labels[operando]);
 
                             // Log
-                            logString = string.Format(logString, int.Parse(operando).ToString("X"));
+                            logString = string.Format(logString, operando);
                             break;
                         case Operators.BRPOS:
                             if (process.Ac > 0)
                             {
-                                process.JumpTo(int.Parse(operando));
+                                process.JumpTo(process.Labels[operando]);
                             }
 
                             // Log
-                            logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
+                            logString = string.Format(logString, process.Ac, operando);
                             break;
                         case Operators.BRZERO:
                             if (process.Ac == 0)
                             {
-                                process.JumpTo(int.Parse(operando));
+                                process.JumpTo(process.Labels[operando]);
                             }
 
                             // Log
-                            logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
+                            logString = string.Format(logString, process.Ac, operando);
                             break;
                         case Operators.BRNEG:
                             if (process.Ac < 0)
                             {
-                                process.JumpTo(int.Parse(operando));
+                                process.JumpTo(process.Labels[operando]);
                             }
 
                             // Log
-                            logString = string.Format(logString, process.Ac, int.Parse(operando).ToString("X"));
+                            logString = string.Format(logString, process.Ac, operando);
                             break;
                         case Operators.SYSCALL:
                             switch (value)

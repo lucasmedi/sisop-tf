@@ -16,20 +16,20 @@ namespace sisop_tf
             Console.WriteLine("**** SISOP - Etapa 1 *****");
             Console.WriteLine();
 
-            try
-            {
+            //try
+            //{
                 Execute();
-            }
-            catch (DirectoryNotFoundException)
-            {
-                Console.WriteLine("Erro: pasta ou arquivos .asm não encontrados.");
-                Console.WriteLine("Pressione qualquer tecla para finalizar.");
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("\nErro ao executar aplicação!");
-                Console.WriteLine("Pressione qualquer tecla para finalizar.");
-            }
+            //}
+            //catch (DirectoryNotFoundException)
+            //{
+            //    Console.WriteLine("Erro: pasta ou arquivos .asm não encontrados.");
+            //    Console.WriteLine("Pressione qualquer tecla para finalizar.");
+            //}
+            //catch (Exception)
+            //{
+            //    Console.WriteLine("\nErro ao executar aplicação!");
+            //    Console.WriteLine("Pressione qualquer tecla para finalizar.");
+            //}
 
             Console.ReadKey();
         }
@@ -148,16 +148,16 @@ namespace sisop_tf
             if (p == null)
             {
                 Console.WriteLine("Imprimir estado da memória");
-                pages = p.Pages;
+                pages = memory.GetPageIds(); 
             }
             else
             {
                 Console.WriteLine("Imprimir estado da memória do processo {0}", p.Id);
-                pages = memory.GetPageIds();
+                pages = p.Pages;
             }
 
             var preview = new StringBuilder();
-            preview.Append("Format: <Page>-<Line>: <Value>");
+            preview.AppendLine("Formato: <Page>-<Line>: <Value>");
 
             foreach (var pageId in pages)
             {
@@ -166,7 +166,7 @@ namespace sisop_tf
                     var o = memory.GetValue(pageId, i);
 
                     var n = 0;
-                    if (int.TryParse(o, out i))
+                    if (int.TryParse(o, out n))
                     {
                         o = n.ToString("X");
                     }
