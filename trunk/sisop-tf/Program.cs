@@ -13,7 +13,7 @@ namespace sisop_tf
         static void Main(string[] args)
         {
             // Log: início da aplicação
-            Console.WriteLine("**** SISOP - Etapa 1 *****");
+            Console.WriteLine("**** SISOP - Etapa 2 *****");
             Console.WriteLine();
 
             try
@@ -86,7 +86,14 @@ namespace sisop_tf
                 default:
                     break;
             }
-            
+
+            Console.WriteLine();
+
+            // Log: estado da memória
+            MemoryPreview();
+
+            Console.WriteLine();
+
             Console.WriteLine("Passo 1: carregar arquivos");
             var filePaths = Directory.GetFiles(@"..\..\Files\", "*.asm");
             for (int i = 0; i < filePaths.Length; i++)
