@@ -64,6 +64,8 @@ namespace sisop_tf
                     {
                         case 1:
                             scheduler = SchedulerType.SJF_P;
+                            Console.WriteLine("SJF Preemptivo indisponível. Favor utilizar Round Robin.");
+                            scheduler = null;
                             break;
                         case 2:
                             scheduler = SchedulerType.RoundRobin;
