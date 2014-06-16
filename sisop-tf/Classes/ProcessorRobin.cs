@@ -205,6 +205,10 @@ namespace sisop_tf
                                     // Log
                                     logString = string.Format(logString, "INPUT: {0}", value);
                                     break;
+                                case 3:
+                                    break;
+                                case 4:
+                                    break;
                             }
 
                             // finaliza o processamento

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using sisop_tf.Classes;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,6 +13,7 @@ namespace sisop_tf
 
         protected Queue<Process> processing { get; set; }
         protected List<Process> waiting { get; set; }
+        protected Queue<Device> slots { get; set; }
 
         protected Random random;
         
@@ -21,9 +23,22 @@ namespace sisop_tf
 
             processing = new Queue<Process>();
             waiting = new List<Process>();
+            slots = new Queue<Device>();
 
             random = new Random(new Random().Next(0, 1000000));
         }
+
+        #region Slot controller
+        public void AddToSlotQueue(Device dev)
+        {
+            slots.Enqueue(dev);
+        }
+
+        public Device DequeueDevice()
+        {
+            return slots.Dequeue();
+        }
+        #endregion
 
         #region Controling
 
