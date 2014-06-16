@@ -1,4 +1,6 @@
-﻿using System;
+﻿using sisop_tf.Classes;
+using sisop_tf.Enums;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -86,6 +88,65 @@ namespace sisop_tf
                 default:
                     break;
             }
+
+            #region SLOTS
+            var slots = 0;
+            Method inputMethod = Method.READ;
+            InputType inputSelected = InputType.VGA;
+            do
+            {
+                var value = -1;
+                Console.WriteLine("");
+                Console.WriteLine("Escolha o dispositivo do Slot {0}: ", slots);
+                Console.WriteLine("Impressão na tela = 1");
+                Console.WriteLine("Teclado = 2");
+                Console.WriteLine("Impressora = 3");
+                Console.WriteLine("Scanner = 4");
+                if (int.TryParse(Console.ReadLine(), out value))
+                {
+                    switch (value)
+                    {
+                        case 1:
+                            inputSelected = InputType.VGA;
+                            break;
+                        case 2:
+                            inputSelected = InputType.KEYBOARD;
+                            break;
+                        case 3:
+                            inputSelected = InputType.PRINTER;
+                            break;
+                        case 4:
+                            inputSelected = InputType.SCANNER;
+                            break;
+                    }
+                }
+
+                Console.WriteLine("");
+                Console.WriteLine("Defina o método de E/S");
+                Console.WriteLine("Leitura = 0");
+                Console.WriteLine("Escrita = 1");
+                Console.WriteLine("Leitura/Escrita = 2");
+                if (int.TryParse(Console.ReadLine(), out value))
+                {
+                    switch (value)
+                    {
+                        case 0:
+                            inputMethod = Method.READ;
+                            break;
+                        case 1:
+                            inputMethod = Method.WRITE;
+                            break;
+
+                        case 2:
+                            inputMethod = Method.ALL;
+                            break;
+                    }
+                }
+
+                processor.AddToSlotQueue(new Device(slots, inputMethod, inputSelected.ToString(), new TimeSpan(), new TimeSpan()));
+                slots++;
+            } while (slots <= 3);
+            #endregion
 
             Console.WriteLine();
 
