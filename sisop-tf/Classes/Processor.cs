@@ -13,7 +13,7 @@ namespace sisop_tf
 
         protected Queue<Process> processing { get; set; }
         protected List<Process> waiting { get; set; }
-        protected Queue<Device> slots { get; set; }
+        protected List<Device> slots { get; set; }
 
         protected Random random;
         
@@ -23,21 +23,39 @@ namespace sisop_tf
 
             processing = new Queue<Process>();
             waiting = new List<Process>();
-            slots = new Queue<Device>();
+            slots = new List<Device>();
 
             random = new Random(new Random().Next(0, 1000000));
         }
 
         #region Slot controller
-        public void AddToSlotQueue(Device dev)
+        public void AddToSlotList(Device dev)
         {
-            slots.Enqueue(dev);
+            slots.Add(dev);
         }
 
-        public Device DequeueDevice()
+        public Device GetDevice(int syscall)
         {
-            return slots.Dequeue();
+            return slots.Where(x => x.SyscallValue == syscall).FirstOrDefault();
         }
+
+        public void PrintRequestQueueForAll()
+        {
+            var count = 1;
+            Console.WriteLine();
+            foreach (var item in slots)
+            {
+                Console.WriteLine();
+                Console.WriteLine("-> Impressão da fila de requests: {0}", item.Name.ToString());
+                foreach (Tuple<int, int> fila in item.Requests)
+                {
+                    Console.WriteLine("->->-> Item {0} da fila tem tempos (Read/Write): {1} e {2}", count, fila.Item1, fila.Item2);
+                    count++;
+                }
+                Console.WriteLine();
+            }
+        }
+
         #endregion
 
         #region Controling

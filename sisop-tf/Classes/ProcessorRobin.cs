@@ -1,6 +1,9 @@
-﻿using System;
+﻿using sisop_tf.Classes;
+using sisop_tf.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace sisop_tf
 {
@@ -19,6 +22,7 @@ namespace sisop_tf
         /// </summary>
         public override void Execute()
         {
+            var waitTime = 0;
             OrganizeWaiting();
 
             while (!IsEmpty())
@@ -168,6 +172,7 @@ namespace sisop_tf
                             logString = string.Format(logString, process.Ac, operando);
                             break;
                         case Operators.SYSCALL:
+                            Device device = null;
                             switch (value)
                             {
                                 case 0:
@@ -178,6 +183,9 @@ namespace sisop_tf
                                     break;
                                 case 1:
                                     Console.WriteLine("Impressão do AC: {0}", process.Ac);
+                                    //recupera o device para a operacao
+                                    device = this.GetDevice(1);
+                                    OrganizeSlotRequest(device, waitTime);
 
                                     // Bloqueia processo
                                     blocked = true;
@@ -187,6 +195,8 @@ namespace sisop_tf
                                     break;
                                 case 2:
                                     bool aceito = false;
+                                    device = this.GetDevice(2);
+                                    OrganizeSlotRequest(device, waitTime);
                                     do
                                     {
                                         Console.Write("Leitura para AC: ");
@@ -206,10 +216,17 @@ namespace sisop_tf
                                     logString = string.Format(logString, "INPUT: {0}", value);
                                     break;
                                 case 3:
+                                    device = this.GetDevice(3);
+                                    OrganizeSlotRequest(device, waitTime);
+                                    blocked = true;
                                     break;
                                 case 4:
+                                    device = this.GetDevice(4);
+                                    OrganizeSlotRequest(device, waitTime);
+                                    blocked = true;
                                     break;
                             }
+                            PrintRequestQueueForAll();
 
                             // finaliza o processamento
                             isProcessing = false;
@@ -235,7 +252,7 @@ namespace sisop_tf
                     if (blocked)
                     {
                         process.State = State.Blocked;
-                        var waitTime = random.Next(10, 40);
+                        //var waitTime = random.Next(10, 40); trocado pelo tempo do device - var no topo do metodo
                         process.At = totalTime + waitTime;
                         AddToWaiting(process);
 
@@ -310,6 +327,28 @@ namespace sisop_tf
 
                 if (process.State == State.Blocked && process.At <= totalTime)
                 {
+                    //Em Blocked, espera tempo simulado de requisicao acabar e passa para ready
+                    //sai da fila de requisicoes do device que solicitou a requisicao - atendido a requisicao
+                    var pendingDevices = this.slots.Where(x => x.Requests.Any(y => y.Item1 > 0 || y.Item2 > 0));
+                    foreach (var device in pendingDevices)
+                    {
+                        
+                        Console.WriteLine("Atendendo ao dispositivo: {0}", device.Name.ToString());
+                        if (device.Requests.First().Item1 > 0)
+                        {
+                            Console.WriteLine("Lendo do dispositivo: {0} por {1} segundos",
+                                device.Name.ToString(), device.Requests.First().Item1);
+                            //Thread.Sleep(new TimeSpan(0, 0, device.Requests.First().Item1));
+                        }
+                        if (device.Requests.First().Item2 > 0)
+                        {
+                            Console.WriteLine("Escrevendo no dispositivo: {0} por {1} segundos",
+                                device.Name.ToString(), device.Requests.First().Item2);
+                            //Thread.Sleep(new TimeSpan(0, 0, device.Requests.First().Item2));
+                        }
+                        device.RemoveRequest();
+                    }
+
                     // Adiciona para remoção da waiting
                     removed.Add(process);
 
@@ -338,6 +377,23 @@ namespace sisop_tf
             {
                 p.Wt += elapsed;
             }
+        }
+
+        private void OrganizeSlotRequest(Device device, int waitTime)
+        {
+            //Adiciona requisicao na lista do dispositivo
+            waitTime = new TimeSpan(0, 0, 10).Seconds;
+            if (device != null)
+            {
+                if (device.Method.Equals(Method.READ))
+                    device.AddRequest(waitTime, null);
+                else if (device.Method.Equals(Method.WRITE))
+                    device.AddRequest(null, waitTime);
+                else if (device.Method.Equals(Method.ALL))
+                    device.AddRequest(waitTime, waitTime);
+            }
+            //device.PrintRequestQueue(); imprime fila so do dispositivo - talvez precise na apresentacao
+            
         }
     }
 }
