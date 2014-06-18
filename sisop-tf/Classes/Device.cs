@@ -28,6 +28,7 @@ namespace sisop_tf.Classes
             Name = name;
             ReadTime = (read.HasValue ? read.Value : new TimeSpan(-1));
             WriteTime = (write.HasValue ? write.Value : new TimeSpan(-1));
+            Requests = new Queue<Tuple<TimeSpan, TimeSpan>>();
             Requests.Enqueue(new Tuple<TimeSpan,TimeSpan>(ReadTime, WriteTime));
         }
 

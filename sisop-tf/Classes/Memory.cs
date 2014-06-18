@@ -1,5 +1,4 @@
-﻿
-namespace sisop_tf.Structure
+﻿namespace sisop_tf.Structure
 {
     public class Memory
     {
