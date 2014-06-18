@@ -27,9 +27,11 @@ namespace sisop_tf
                 Console.WriteLine("Erro: pasta ou arquivos .asm não encontrados.");
                 Console.WriteLine("Pressione qualquer tecla para finalizar.");
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Console.WriteLine("\nErro ao executar aplicação!");
+                Console.WriteLine("\n" + e.Message);
+                Console.WriteLine("\n" + e.StackTrace);
                 Console.WriteLine("Pressione qualquer tecla para finalizar.");
             }
 
@@ -91,6 +93,7 @@ namespace sisop_tf
 
             #region SLOTS
             var slots = 0;
+            var syscall = 0;
             Method inputMethod = Method.READ;
             InputType inputSelected = InputType.VGA;
             do
@@ -110,23 +113,27 @@ namespace sisop_tf
                         case 1:
                             inputSelected = InputType.VGA;
                             inputMethod = Method.WRITE;
+                            syscall = 1;
                             break;
                         case 2:
                             inputSelected = InputType.KEYBOARD;
                             inputMethod = Method.READ;
+                            syscall = 2;
                             break;
                         case 3:
                             inputSelected = InputType.PRINTER;
                             inputMethod = Method.WRITE;
+                            syscall = 3;
                             break;
                         case 4:
                             inputSelected = InputType.SCANNER;
-                            inputMethod = Method.READ;
+                            inputMethod = Method.ALL;
+                            syscall = 4;
                             break;
                     }
                 }
 
-                processor.AddToSlotQueue(new Device(slots, inputMethod, inputSelected.ToString(), new TimeSpan(), new TimeSpan()));
+                processor.AddToSlotList(new Device(slots, syscall, inputMethod, inputSelected.ToString(), null, null));
                 slots++;
             } while (slots <= 3);
             #endregion

@@ -1,6 +1,9 @@
 .code
 LOAD var1
 ADD var2
+SYSCALL 3
+SYSCALL 2
+SYSCALL 4
 STORE var3
 LOAD var2
 DIV #3

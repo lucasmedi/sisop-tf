@@ -15,22 +15,50 @@ namespace sisop_tf.Classes
         //- Tempo da requisição de leitura
         //- Tempo da requisição de escrita
         public int Slot;
+        public int SyscallValue;
         public Method Method;
         public String Name;
-        public TimeSpan ReadTime;
-        public TimeSpan WriteTime;
-        public Queue<Tuple<TimeSpan, TimeSpan>> Requests;
+        public int ReadTime;
+        public int WriteTime;
+        public Queue<Tuple<int, int>> Requests;
+        
 
-        public Device(int slot, Method method, String name, TimeSpan? read, TimeSpan? write)
+        public Device(int slot, int syscall, Method method, String name, int? read, int? write)
         {
             Slot = slot;
+            SyscallValue = syscall;
             Method = method;
             Name = name;
-            ReadTime = (read.HasValue ? read.Value : new TimeSpan(-1));
-            WriteTime = (write.HasValue ? write.Value : new TimeSpan(-1));
-            Requests = new Queue<Tuple<TimeSpan, TimeSpan>>();
-            Requests.Enqueue(new Tuple<TimeSpan,TimeSpan>(ReadTime, WriteTime));
+            ReadTime = FormatTimespan(read);
+            WriteTime = FormatTimespan(write);
+            Requests = new Queue<Tuple<int, int>>();
         }
 
+        public void AddRequest(int? read, int? write)
+        {
+            Requests.Enqueue(new Tuple<int, int>(FormatTimespan(read), FormatTimespan(write)));
+        }
+
+        public void RemoveRequest()
+        {
+            Requests.Dequeue();
+        }
+
+        private int FormatTimespan(int? time)
+        {
+            return (time.HasValue ? time.Value : -1);
+        }
+
+        public void PrintRequestQueue()
+        {
+            var count = 1;
+            Console.WriteLine();
+            Console.WriteLine("-> Impressão da fila de requests: {0}", this.Name.ToString());
+            foreach (Tuple<int, int> fila in this.Requests)
+            {
+                Console.WriteLine("->->-> Item {0} da fila tem tempos (Read/Write): {1} e {2}", count, fila.Item1, fila.Item2);
+                count++;
+            }
+        }
     }
 }
