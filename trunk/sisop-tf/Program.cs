@@ -16,7 +16,10 @@ namespace sisop_tf
         {
             // Log: início da aplicação
             Console.WriteLine("**** SISOP - Etapa 2 *****");
+            Program.WriteLine("**** SISOP - Etapa 2 *****");
+
             Console.WriteLine();
+            Program.WriteLine("");
 
             try
             {
@@ -25,15 +28,21 @@ namespace sisop_tf
             catch (DirectoryNotFoundException)
             {
                 Console.WriteLine("Erro: pasta ou arquivos .asm não encontrados.");
+                Program.WriteLine("Erro: pasta ou arquivos .asm não encontrados.");
+
                 Console.WriteLine("Pressione qualquer tecla para finalizar.");
+                Program.WriteLine("Pressione qualquer tecla para finalizar.");
             }
             catch (Exception e)
             {
                 Console.WriteLine("\nErro ao executar aplicação!");
-                Console.WriteLine("\n" + e.Message);
-                Console.WriteLine("\n" + e.StackTrace);
+                Program.WriteLine("\nErro ao executar aplicação!");
+
                 Console.WriteLine("Pressione qualquer tecla para finalizar.");
+                Program.WriteLine("Pressione qualquer tecla para finalizar.");
             }
+
+            Close();
 
             Console.ReadKey();
         }
@@ -139,11 +148,13 @@ namespace sisop_tf
             #endregion
 
             Console.WriteLine();
+            Program.WriteLine("");
 
             // Log: estado da memória
             MemoryPreview();
 
             Console.WriteLine();
+            Program.WriteLine("");
 
             Console.WriteLine("Passo 1: carregar arquivos");
             var filePaths = Directory.GetFiles(@"..\..\Files\", "*.asm");
@@ -197,6 +208,7 @@ namespace sisop_tf
             }
 
             Console.WriteLine();
+            Program.WriteLine("");
 
             processor.Execute();
 
@@ -204,23 +216,27 @@ namespace sisop_tf
             MemoryPreview();
 
             Console.WriteLine();
+            Program.WriteLine("");
 
             Console.WriteLine("**** HALT! *****");
+            Program.WriteLine("**** HALT! *****");
 
             Console.ReadKey();
         }
+
+        private static StreamWriter writer;
 
         public static void MemoryPreview(Process p = null)
         {
             IList<int> pages = null;
             if (p == null)
             {
-                Console.WriteLine("Imprimir estado da memória");
-                pages = memory.GetPageIds(); 
+                WriteLine("Imprimir estado da memória");
+                pages = memory.GetPageIds();
             }
             else
             {
-                Console.WriteLine("Imprimir estado da memória do processo {0}", p.Id);
+                WriteLine(string.Format("Imprimir estado da memória do processo {0}", p.Id));
                 pages = p.Pages;
             }
 
@@ -245,11 +261,11 @@ namespace sisop_tf
 
             if (!string.IsNullOrEmpty(preview.ToString()))
             {
-                Console.Write(preview.ToString());
+                Write(preview.ToString());
             }
             else
             {
-                Console.WriteLine("> Memória vazia");
+                WriteLine("> Memória vazia");
             }
 
             Console.WriteLine("Fim imprimir");
@@ -299,5 +315,36 @@ namespace sisop_tf
 
             return log;
         }
+
+        #region Export To File
+
+        public static void Create()
+        {
+            writer = new StreamWriter("log.txt");
+        }
+
+        public static void Write(string text)
+        {
+            if (writer == null)
+                Create();
+
+            writer.Write(text);
+        }
+
+        public static void WriteLine(string text)
+        {
+            if (writer == null)
+                Create();
+
+            writer.WriteLine(text);
+        }
+
+        public static void Close()
+        {
+            writer.Flush();
+            writer.Close();
+        }
+
+        #endregion
     }
 }
