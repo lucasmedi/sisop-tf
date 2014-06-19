@@ -27,7 +27,7 @@ namespace sisop_tf
 
             while (!IsEmpty())
             {
-                Console.WriteLine("Tempo Total: {0}\n", totalTime);
+                Program.WriteLine(string.Format("Tempo Total: {0}\n", totalTime));
 
                 OrganizeWaiting();
 
@@ -40,7 +40,7 @@ namespace sisop_tf
                 {
                     process = GetNext();
                     process.State = State.Running;
-                    Console.WriteLine("Processando: {0}", process.Id);
+                    Program.WriteLine(string.Format("Processando: {0}", process.Id));
                 }
                 else
                 {
@@ -182,7 +182,7 @@ namespace sisop_tf
                                     logString = string.Format(logString, "HALT - PROCESSO TERMINADO");
                                     break;
                                 case 1:
-                                    Console.WriteLine("Impressão do AC: {0}", process.Ac);
+                                    Program.WriteLine(string.Format("Impressão do AC: {0}", process.Ac));
                                     //recupera o device para a operacao
                                     device = this.GetDevice(1);
                                     OrganizeSlotRequest(device, waitTime);
@@ -237,7 +237,7 @@ namespace sisop_tf
                             break;
                     }
 
-                    Console.WriteLine(logString);
+                    Program.WriteLine(logString);
 
                     control++;
                     totalTime++;
@@ -256,7 +256,7 @@ namespace sisop_tf
                         process.At = totalTime + waitTime;
                         AddToWaiting(process);
 
-                        Console.WriteLine("Bloqueia processo {0} com AT para {1}", process.Id, process.At);
+                        Program.WriteLine(string.Format("Bloqueia processo {0} com AT para {1}", process.Id, process.At));
                     }
                     else if (process.HasNext() && control == quantum)
                     {
@@ -269,7 +269,7 @@ namespace sisop_tf
                         Deallocate(process);
                     }
 
-                    Console.WriteLine();
+                    Program.WriteLine("");
                 }
             }
         }
@@ -287,8 +287,8 @@ namespace sisop_tf
                 if (process.Size > memory.Size)
                 {
                     removed.Add(process);
-                    Console.WriteLine("Processo {0} ignorado por falta de espaço total na memória principal.", process.Id);
-                    Console.WriteLine();
+                    Program.WriteLine(string.Format("Processo {0} ignorado por falta de espaço total na memória principal.", process.Id));
+                    Program.WriteLine("");
                     continue;
                 }
 

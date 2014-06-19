@@ -123,11 +123,11 @@ namespace sisop_tf
         
             if (process.State == State.Exit)
             {
-                Console.WriteLine("Término do processamento");
-                Console.WriteLine("Processo {0} - Estatíticas: WT={1} TT={2}", process.Id, process.Wt, process.Tt);
+                Program.WriteLine(string.Format("Término do processamento"));
+                Program.WriteLine(string.Format("Processo {0} - Estatíticas: WT={1} TT={2}", process.Id, process.Wt, process.Tt));
             }
 
-            Console.WriteLine("Desalocou o processo {0} da memória principal.", process.Id);
+            Program.WriteLine(string.Format("Desalocou o processo {0} da memória principal.", process.Id));
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace sisop_tf
             var labels = new Dictionary<string, KeyValuePair<int, int>>();
 
             // Log: nome do arquivo a ser executado
-            Console.WriteLine("> Carregamento do processo {0}. Arquivo: '{1}'", process.Id, process.FilePath);
+            Program.WriteLine(string.Format("> Carregamento do processo {0}. Arquivo: '{1}'", process.Id, process.FilePath));
 
             // Carrega código do arquivo .asm
             var file = new StreamReader(process.FilePath);
