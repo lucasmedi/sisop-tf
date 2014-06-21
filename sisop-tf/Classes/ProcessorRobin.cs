@@ -1,9 +1,7 @@
-﻿using sisop_tf.Classes;
-using sisop_tf.Enums;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
+using sisop_tf.Classes;
+using sisop_tf.Enums;
 
 namespace sisop_tf
 {
@@ -22,7 +20,6 @@ namespace sisop_tf
         /// </summary>
         public override void Execute()
         {
-            var waitTime = 0;
             OrganizeWaiting();
 
             while (!IsEmpty())
@@ -182,51 +179,30 @@ namespace sisop_tf
                                     logString = string.Format(logString, "HALT - PROCESSO TERMINADO");
                                     break;
                                 case 1:
-                                    Program.WriteLine(string.Format("Impressão do AC: {0}", process.Ac));
-                                    //recupera o device para a operacao
                                     device = this.GetDevice(1);
-                                    OrganizeSlotRequest(device, waitTime);
-
-                                    // Bloqueia processo
-                                    blocked = true;
-
-                                    // Log
-                                    logString = string.Format(logString, "OUTPUT: " + process.Ac);
                                     break;
                                 case 2:
-                                    bool aceito = false;
                                     device = this.GetDevice(2);
-                                    OrganizeSlotRequest(device, waitTime);
-                                    do
-                                    {
-                                        Console.Write("Leitura para AC: ");
-                                        var input = Console.ReadLine();
-                                        aceito = int.TryParse(input, out value);
-
-                                        if (!aceito)
-                                            Console.WriteLine("Valor inválido!");
-                                    } while (!aceito);
-
-                                    process.LoadAc(value);
-
-                                    // Bloqueia processo
-                                    blocked = true;
-
-                                    // Log
-                                    logString = string.Format(logString, "INPUT: {0}", value);
                                     break;
                                 case 3:
                                     device = this.GetDevice(3);
-                                    OrganizeSlotRequest(device, waitTime);
-                                    blocked = true;
                                     break;
                                 case 4:
                                     device = this.GetDevice(4);
-                                    OrganizeSlotRequest(device, waitTime);
-                                    blocked = true;
                                     break;
                             }
-                            PrintRequestQueueForAll();
+
+                            if (device != null)
+                            {
+                                // Adiciona processo no dispositivo
+                                AddDeviceRequest(device, process.Id);
+
+                                // Bloqueia processo
+                                blocked = true;
+
+                                // Log
+                                logString = string.Format(logString, device.Name);
+                            }
 
                             // finaliza o processamento
                             isProcessing = false;
@@ -244,6 +220,7 @@ namespace sisop_tf
                 }
 
                 OrganizeWt(control);
+                OrganizeDevices(control);
 
                 if (process != null)
                 {
@@ -252,11 +229,9 @@ namespace sisop_tf
                     if (blocked)
                     {
                         process.State = State.Blocked;
-                        //var waitTime = random.Next(10, 40); trocado pelo tempo do device - var no topo do metodo
-                        process.At = totalTime + waitTime;
                         AddToWaiting(process);
 
-                        Program.WriteLine(string.Format("Bloqueia processo {0} com AT para {1}", process.Id, process.At));
+                        Program.WriteLine(string.Format("Bloqueia processo {0}", process.Id));
                     }
                     else if (process.HasNext() && control == quantum)
                     {
@@ -325,38 +300,19 @@ namespace sisop_tf
                     }
                 }
 
-                if (process.State == State.Blocked && process.At <= totalTime)
+                if (process.State == State.Blocked)
                 {
-                    //Em Blocked, espera tempo simulado de requisicao acabar e passa para ready
-                    //sai da fila de requisicoes do device que solicitou a requisicao - atendido a requisicao
-                    var pendingDevices = this.slots.Where(x => x.Requests.Any(y => y.Item1 > 0 || y.Item2 > 0));
-                    foreach (var device in pendingDevices)
+                    if (this.slots.Where(x => x.HasDevice(process.Id)).Count() == 0)
                     {
-                        
-                        Console.WriteLine("Atendendo ao dispositivo: {0}", device.Name.ToString());
-                        if (device.Requests.First().Item1 > 0)
-                        {
-                            Console.WriteLine("Lendo do dispositivo: {0} por {1} segundos",
-                                device.Name.ToString(), device.Requests.First().Item1);
-                            //Thread.Sleep(new TimeSpan(0, 0, device.Requests.First().Item1));
-                        }
-                        if (device.Requests.First().Item2 > 0)
-                        {
-                            Console.WriteLine("Escrevendo no dispositivo: {0} por {1} segundos",
-                                device.Name.ToString(), device.Requests.First().Item2);
-                            //Thread.Sleep(new TimeSpan(0, 0, device.Requests.First().Item2));
-                        }
-                        device.RemoveRequest();
+                        // Adiciona para remoção da waiting
+                        removed.Add(process);
+
+                        // Altera estado para State.Ready
+                        process.State = State.Ready;
+
+                        // Adiciona na fila
+                        AddToQueue(process);
                     }
-
-                    // Adiciona para remoção da waiting
-                    removed.Add(process);
-
-                    // Altera estado para State.Ready
-                    process.State = State.Ready;
-
-                    // Adiciona na fila
-                    AddToQueue(process);
                 }
             }
 
@@ -379,21 +335,40 @@ namespace sisop_tf
             }
         }
 
-        private void OrganizeSlotRequest(Device device, int waitTime)
+        private void OrganizeDevices(int elapsed)
         {
-            //Adiciona requisicao na lista do dispositivo
-            waitTime = new TimeSpan(0, 0, 10).Seconds;
-            if (device != null)
+            foreach (var device in slots)
             {
-                if (device.Method.Equals(Method.READ))
-                    device.AddRequest(waitTime, null);
-                else if (device.Method.Equals(Method.WRITE))
-                    device.AddRequest(null, waitTime);
-                else if (device.Method.Equals(Method.ALL))
-                    device.AddRequest(waitTime, waitTime);
+                device.ControlRequest(elapsed);
             }
-            //device.PrintRequestQueue(); imprime fila so do dispositivo - talvez precise na apresentacao
-            
+
+            PrintRequestQueueForAll();
+        }
+
+        private void AddDeviceRequest(Device device, string pId)
+        {
+            if (device == null)
+            {
+                return;
+            }
+
+            // Adiciona requisicao na lista do dispositivo
+            switch (device.Method)
+            {
+                case Method.READ:
+                    device.AddRequest(pId);
+                    break;
+                case Method.WRITE:
+                    device.AddRequest(pId);
+                    break;
+                case Method.ALL:
+                    device.AddRequest(pId);
+                    break;
+                default:
+                    break;
+            }
+
+            device.PrintRequestQueue(); // imprime fila do dispositivo
         }
     }
 }

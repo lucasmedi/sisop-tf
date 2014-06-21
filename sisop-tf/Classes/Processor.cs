@@ -1,8 +1,8 @@
-﻿using sisop_tf.Classes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using sisop_tf.Classes;
 
 namespace sisop_tf
 {
@@ -13,10 +13,9 @@ namespace sisop_tf
 
         protected Queue<Process> processing { get; set; }
         protected List<Process> waiting { get; set; }
+
         protected List<Device> slots { get; set; }
 
-        protected Random random;
-        
         public Processor(PagedMemory memory)
         {
             this.memory = memory;
@@ -24,11 +23,10 @@ namespace sisop_tf
             processing = new Queue<Process>();
             waiting = new List<Process>();
             slots = new List<Device>();
-
-            random = new Random(new Random().Next(0, 1000000));
         }
 
         #region Slot controller
+
         public void AddToSlotList(Device dev)
         {
             slots.Add(dev);
@@ -41,18 +39,10 @@ namespace sisop_tf
 
         public void PrintRequestQueueForAll()
         {
-            var count = 1;
-            Console.WriteLine();
+            Program.WriteLine("** Imprime todos os dispositivos **");
             foreach (var item in slots)
             {
-                Console.WriteLine();
-                Console.WriteLine("-> Impressão da fila de requests: {0}", item.Name.ToString());
-                foreach (Tuple<int, int> fila in item.Requests)
-                {
-                    Console.WriteLine("->->-> Item {0} da fila tem tempos (Read/Write): {1} e {2}", count, fila.Item1, fila.Item2);
-                    count++;
-                }
-                Console.WriteLine();
+                item.PrintRequestQueue();
             }
         }
 

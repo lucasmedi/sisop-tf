@@ -1,63 +1,121 @@
-﻿using sisop_tf.Enums;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using sisop_tf.Enums;
 
 namespace sisop_tf.Classes
 {
     public class Device
     {
         //- Slot a que pertence
-        //- Modos permitidos (escrita, leitura ou ambos)
-        //- Nome do dispositivo
+        private int slot;
+
         //- Tempo da requisição de leitura
+        private int readTime;
+
         //- Tempo da requisição de escrita
-        public int Slot;
-        public int SyscallValue;
-        public Method Method;
-        public String Name;
-        public int ReadTime;
-        public int WriteTime;
-        public Queue<Tuple<int, int>> Requests;
-        
+        private int writeTime;
 
-        public Device(int slot, int syscall, Method method, String name, int? read, int? write)
+        // Fila de requisições
+        private Queue<DeviceRequest> requests;
+
+        //- Nome do dispositivo
+        public String Name { get; private set; }
+
+        // Valor do syscall
+        public int SyscallValue { get; private set; }
+
+        //- Modos permitidos (escrita, leitura ou ambos)
+        public Method Method { get; private set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="slot"></param>
+        /// <param name="syscall"></param>
+        /// <param name="method"></param>
+        /// <param name="name"></param>
+        /// <param name="read"></param>
+        /// <param name="write"></param>
+        public Device(int slot, int syscall, Method method, String name, int read, int write)
         {
-            Slot = slot;
-            SyscallValue = syscall;
-            Method = method;
-            Name = name;
-            ReadTime = FormatTimespan(read);
-            WriteTime = FormatTimespan(write);
-            Requests = new Queue<Tuple<int, int>>();
+            this.slot = slot;
+            this.SyscallValue = syscall;
+            this.Method = method;
+            this.Name = name;
+            this.readTime = read;
+            this.writeTime = write;
+            this.requests = new Queue<DeviceRequest>();
         }
 
-        public void AddRequest(int? read, int? write)
+        public void AddRequest(string pId)
         {
-            Requests.Enqueue(new Tuple<int, int>(FormatTimespan(read), FormatTimespan(write)));
+            var pTime = 0;
+            switch (Method)
+            {
+                case Method.READ:
+                    pTime = readTime;
+                    break;
+                case Method.WRITE:
+                    pTime = writeTime;
+                    break;
+                case Method.ALL:
+                    pTime = readTime + writeTime;
+                    break;
+            }
+
+            requests.Enqueue(new DeviceRequest {
+                Id = pId,
+                Time = pTime
+            });
         }
 
-        public void RemoveRequest()
+        public void ControlRequest(int time)
         {
-            Requests.Dequeue();
+            var request = requests.FirstOrDefault();
+            if (request == null)
+                return;
+
+            var pTime = request.Time;
+            if (pTime > time)
+            {
+                request.Time -= time;
+            }
+            else
+            {
+                Program.WriteLine(string.Format("> Finalizado atendimento do processo {0}", request.Id));
+                Program.WriteLine("");
+                requests.Dequeue();
+
+                if (pTime < time)
+                {
+                    request = requests.FirstOrDefault();
+                    if (request != null)
+                    {
+                        request.Time -= (time - pTime);
+                    }
+                }
+            }
         }
 
-        private int FormatTimespan(int? time)
+        public bool HasDevice(string pId)
         {
-            return (time.HasValue ? time.Value : -1);
+            return requests.Count(o => o.Id == pId) > 0;
         }
 
         public void PrintRequestQueue()
         {
-            var count = 1;
-            Console.WriteLine();
-            Console.WriteLine("-> Impressão da fila de requests: {0}", this.Name.ToString());
-            foreach (Tuple<int, int> fila in this.Requests)
+            Program.WriteLine(string.Format("> Impressão da fila do dispositivo: {0}", this.Name.ToString()));
+            if (requests.Count() > 0)
             {
-                Console.WriteLine("->->-> Item {0} da fila tem tempos (Read/Write): {1} e {2}", count, fila.Item1, fila.Item2);
-                count++;
+                foreach (var fila in this.requests)
+                {
+                    Program.WriteLine(string.Format("Processo {0} da fila tem tempo (Leitura+Escrita): {1}", fila.Id, fila.Time));
+                }
+            }
+            else
+            {
+                Program.WriteLine("Fila vazia.");
             }
         }
     }
