@@ -15,8 +15,8 @@ namespace sisop_tf
         static void Main(string[] args)
         {
             // Log: início da aplicação
-            Console.WriteLine("**** SISOP - Etapa 2 *****");
-            Program.WriteLine("**** SISOP - Etapa 2 *****");
+            Console.WriteLine("**** SISOP - Etapa 3 *****");
+            Program.WriteLine("**** SISOP - Etapa 3 *****");
 
             Console.WriteLine();
             Program.WriteLine("");
@@ -37,6 +37,9 @@ namespace sisop_tf
             {
                 Console.WriteLine("\nErro ao executar aplicação!");
                 Program.WriteLine("\nErro ao executar aplicação!");
+
+                Console.WriteLine(e.StackTrace);
+                Program.WriteLine(e.StackTrace);
 
                 Console.WriteLine("Pressione qualquer tecla para finalizar.");
                 Program.WriteLine("Pressione qualquer tecla para finalizar.");
@@ -100,52 +103,61 @@ namespace sisop_tf
                     break;
             }
 
-            #region SLOTS
-            var slots = 0;
+            // Slots dos dispositivos
+            var slots = 1;
             var syscall = 0;
-            Method inputMethod = Method.READ;
-            InputType inputSelected = InputType.VGA;
+            var readTime = 0;
+            var writeTime = 0;
+            var inputMethod = Method.READ;
+            var inputSelected = InputType.VGA;
+
             do
             {
                 var value = -1;
-                Console.WriteLine("");
-                Console.WriteLine("Escolha o dispositivo do Slot {0}: ", slots);
-                Console.WriteLine("Impressão na tela(Escrita) = 1");
-                Console.WriteLine("Teclado(Leitura) = 2");
-                Console.WriteLine("Impressora(Escrita) = 3");
-                Console.WriteLine("Scanner(Leitura) = 4");
+                Console.WriteLine("Dispositivos:");
+                Console.WriteLine("1 - Impressao na tela (Escrita)");
+                Console.WriteLine("2 - Teclado (Leitura)");
+                Console.WriteLine("3 - Impressora  (Leitura/Escrita)");
+                Console.WriteLine("4 - Scanner (Leitura)");
+                Console.Write("Escolha o dispositivo do Slot (syscall) {0}: ", slots);
                 if (int.TryParse(Console.ReadLine(), out value))
                 {
                     switch (value)
                     {
- 
                         case 1:
                             inputSelected = InputType.VGA;
                             inputMethod = Method.WRITE;
                             syscall = 1;
+                            readTime = 0;
+                            writeTime = 10;
                             break;
                         case 2:
                             inputSelected = InputType.KEYBOARD;
                             inputMethod = Method.READ;
                             syscall = 2;
+                            readTime = 8;
+                            writeTime = 0;
                             break;
                         case 3:
                             inputSelected = InputType.PRINTER;
-                            inputMethod = Method.WRITE;
+                            inputMethod = Method.ALL;
                             syscall = 3;
+                            readTime = 16;
+                            writeTime = 20;
                             break;
                         case 4:
                             inputSelected = InputType.SCANNER;
-                            inputMethod = Method.ALL;
+                            inputMethod = Method.READ;
                             syscall = 4;
+                            readTime = 16;
+                            writeTime = 0;
                             break;
                     }
                 }
 
-                processor.AddToSlotList(new Device(slots, syscall, inputMethod, inputSelected.ToString(), null, null));
+                processor.AddToSlotList(new Device(slots, syscall, inputMethod, inputSelected.ToString(), readTime, writeTime));
                 slots++;
-            } while (slots <= 3);
-            #endregion
+            } while (slots <= 4);
 
             Console.WriteLine();
             Program.WriteLine("");
@@ -268,7 +280,7 @@ namespace sisop_tf
                 WriteLine("> Memória vazia");
             }
 
-            Console.WriteLine("Fim imprimir");
+            WriteLine("Fim imprimir");
         }
 
         public static string LogOperation(Operators op)
@@ -320,7 +332,7 @@ namespace sisop_tf
 
         public static void Create()
         {
-            writer = new StreamWriter("log.txt");
+            writer = new StreamWriter(string.Format("log_{0}.txt", DateTime.Now.Ticks), false);
         }
 
         public static void Write(string text)

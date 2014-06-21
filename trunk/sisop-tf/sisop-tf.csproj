@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes\Device.cs" />
+    <Compile Include="Classes\DeviceRequest.cs" />
     <Compile Include="Classes\Memory.cs" />
     <Compile Include="Classes\Page.cs" />
     <Compile Include="Classes\PagedMemory.cs" />

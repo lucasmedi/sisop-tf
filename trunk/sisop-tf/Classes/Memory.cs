@@ -51,54 +51,5 @@
         {
             return !string.IsNullOrEmpty(memory[key]);
         }
-
-        /// <summary>
-        /// Verifica se existe o espaço informado
-        /// </summary>
-        /// <param name="size">Tamanho a ser verificado</param>
-        /// <param name="position">Valor da posição inicial do espaço, se houver</param>
-        /// <returns>Verdadeiro se existe espaço</returns>
-        //public bool HasSpace(int size, out int position)
-        //{
-        //    var startPosition = -1;
-        //    var freeSize = 0;
-        //    for (int i = 0; i < memory.Length; i++)
-        //    {
-        //        if (string.IsNullOrEmpty(memory[i]))
-        //        {
-        //            freeSize++;
-        //            if (freeSize == 1)
-        //            {
-        //                startPosition = i;
-        //            }
-                    
-        //            if (freeSize == size)
-        //            {
-        //                position = startPosition;
-        //                return true;
-        //            }
-        //        }
-        //        else
-        //        {
-        //            freeSize = 0;
-        //            startPosition = -1;
-        //        }
-        //    }
-
-        //    position = -1;
-        //    return false;
-        //}
-
-        //// Imprime estrutura de páginas
-        //public void PrintPages()
-        //{
-        //    int cont = 0;
-        //    foreach (var p in pages)
-        //    {
-        //        //Console.WriteLine();
-        //        //Console.WriteLine("Bloco " + cont + ": " + p.PosInMemory + "até" + (p.PosInMemory + p.Size - 1));
-        //        // Verificar questão de imprimir a página ocupada por processo.(Só tem empty e full)
-        //    }
-        //}
     }
 }
