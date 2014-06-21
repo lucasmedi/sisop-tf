@@ -220,7 +220,7 @@ namespace sisop_tf
                 }
 
                 OrganizeWt(control);
-                OrganizeDevices(control);
+                OrganizeDevices(control, (blocked ? process.Id : string.Empty));
 
                 if (process != null)
                 {
@@ -335,11 +335,11 @@ namespace sisop_tf
             }
         }
 
-        private void OrganizeDevices(int elapsed)
+        private void OrganizeDevices(int elapsed, string ignoredId)
         {
             foreach (var device in slots)
             {
-                device.ControlRequest(elapsed);
+                device.ControlRequest(elapsed, ignoredId);
             }
 
             PrintRequestQueueForAll();
