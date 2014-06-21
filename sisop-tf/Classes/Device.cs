@@ -70,10 +70,10 @@ namespace sisop_tf.Classes
             });
         }
 
-        public void ControlRequest(int time)
+        public void ControlRequest(int time, string ignoredId)
         {
             var request = requests.FirstOrDefault();
-            if (request == null)
+            if (request == null || request.Id == ignoredId)
                 return;
 
             var pTime = request.Time;
@@ -90,7 +90,7 @@ namespace sisop_tf.Classes
                 if (pTime < time)
                 {
                     request = requests.FirstOrDefault();
-                    if (request != null)
+                    if (request != null || request.Id == ignoredId)
                     {
                         request.Time -= (time - pTime);
                     }
