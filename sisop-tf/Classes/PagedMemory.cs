@@ -38,6 +38,12 @@ namespace sisop_tf
             // Calcula o número de páginas à verificar
             var tam = size / PageSize;
 
+            // Se divisão não é inteira, adiciona mais uma página
+            if (size % PageSize != 0)
+            {
+                tam++;
+            }
+
             // Busca número de páginas disponíveis
             var count = pages.Count(o => o.State == PageState.Free);
 
