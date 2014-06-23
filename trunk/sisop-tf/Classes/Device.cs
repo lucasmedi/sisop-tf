@@ -90,7 +90,7 @@ namespace sisop_tf.Classes
                 if (pTime < time)
                 {
                     request = requests.FirstOrDefault();
-                    if (request != null && request.Id == ignoredId)
+                    if (request != null && request.Id != ignoredId)
                     {
                         request.Time -= (time - pTime);
                     }
